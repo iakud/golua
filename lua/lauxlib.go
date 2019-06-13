@@ -1,12 +1,14 @@
 package lua
 
 /*
-#cgo CFLAGS: -I${SRCDIR}
-#cgo LDFLAGS: -L${SRCDIR} -lluajit -lmingwex
-
 #include <lauxlib.h>
+#include <stdlib.h>
 */
 import "C"
+
+import (
+	"unsafe"
+)
 
 func LuaL_newstate() *Lua_State {
 	return (*Lua_State)(C.luaL_newstate())
@@ -24,4 +26,10 @@ func LuaL_dofile(L *Lua_State, fn string) int {
 		return 1
 	}
 	return 0
+}
+
+func LuaL_loadstring(L *Lua_State, s string) int {
+	c_s := C.CString(s)
+	defer C.free(unsafe.Pointer(c_s))
+	return int(C.luaL_loadstring(L, c_s))
 }
