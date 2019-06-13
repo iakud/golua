@@ -1,61 +1,57 @@
 package lua
 
-/*
-#cgo CFLAGS: -I${SRCDIR}
-#cgo LDFLAGS: -L${SRCDIR} -lluajit -lmingwex
-
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
-#include <stdlib.h>
-*/
-import "C"
-
 import (
 	"fmt"
-	"unsafe"
+
+	"github.com/iakud/luago/lua"
 )
 
-type LuaStack C.lua_State
+type LuaStack struct {
+	l *lua.Lua_State
+}
 
 func NewLuaStack() *LuaStack {
-	return (*LuaStack)(C.luaL_newstate())
+	luaStack := &LuaStack{
+		l: lua.LuaL_newstate(),
+	}
+	return luaStack
 }
 
-func (L *LuaStack) OpenLibs() {
-	C.luaL_openlibs(L)
+func (this *LuaStack) OpenLibs() {
+	lua.LuaL_openlibs(this.l)
 }
 
-func (L *LuaStack) AddPackagePath(path string) {
-	L.GetGlobal(C.LUA_LOADLIBNAME)
-	L.GetField(-1, "path")
-	L.PushString(fmt.Sprintf("%s;%s/?.lua", L.ToString(-1), path))
-	L.SetField(-3, "path")
-	L.Pop(2)
+func (this *LuaStack) AddPackagePath(path string) {
+	lua.Lua_getglobal(this.l, lua.LUA_LOADLIBNAME)
+	lua.Lua_getfield(this.l, -1, "path")
+	cur_path := lua.Lua_tostring(this.l, -1)
+	lua.Lua_pushstring(this.l, fmt.Sprintf("%s;%s/?.lua", cur_path, path))
+	lua.Lua_setfield(this.l, -3, "path")
+	lua.Lua_pop(this.l, 2)
 }
 
-func (L *LuaStack) Load(modname string) {
+func (this *LuaStack) Load(modname string) {
 	if len(modname) == 0 {
 		return
 	}
 	require := fmt.Sprintf("require '%v'", modname)
-	L.ExecuteString(require)
+	this.ExecuteString(require)
 }
 
-func (L *LuaStack) Unload(modname string) {
+func (this *LuaStack) Unload(modname string) {
 	if len(modname) == 0 {
 		return
 	}
-	L.GetGlobal(C.LUA_LOADLIBNAME)
-	L.GetField(-1, "loaded")
-	L.PushString(modname)
-	C.lua_gettable(L, -2)
-	if C.lua_type(L, -1) != C.LUA_TNIL {
-		L.PushString(modname)
-		L.PushNil()
-		C.lua_settable(L, -4)
+	lua.Lua_getglobal(this.l, lua.LUA_LOADLIBNAME)
+	lua.Lua_getfield(this.l, -1, "loaded")
+	lua.Lua_pushstring(this.l, modname)
+	lua.Lua_gettable(this.l, -2)
+	if !lua.Lua_isnil(this.l, -1) {
+		lua.Lua_pushstring(this.l, modname)
+		lua.Lua_pushnil(this.l)
+		lua.Lua_settable(this.l, -4)
 	}
-	L.Pop(3)
+	lua.Lua_pop(this.l, 3)
 }
 
 func (L *LuaStack) Reload(modname string) {
@@ -66,84 +62,81 @@ func (L *LuaStack) Reload(modname string) {
 //
 // push value
 //
-func (L *LuaStack) PushNil() {
-	C.lua_pushnil(L)
+func (this *LuaStack) PushNil() {
+	lua.Lua_pushnil(this.l)
 }
 
-func (L *LuaStack) PushBool(value bool) {
-	if value {
-		C.lua_pushboolean(L, 1)
-	} else {
-		C.lua_pushboolean(L, 0)
-	}
+func (this *LuaStack) PushBool(value bool) {
+	lua.Lua_pushboolean(this.l, value)
 }
 
-func (L *LuaStack) PushInt32(value int32) {
-	C.lua_pushinteger(L, C.lua_Integer(value))
+func (this *LuaStack) PushInt(value int) {
+	lua.Lua_pushinteger(this.l, lua.Lua_Integer(value))
 }
 
-func (L *LuaStack) PushInt64(value int64) {
-	C.lua_pushnumber(L, C.lua_Number(value))
+func (this *LuaStack) PushInt32(value int32) {
+	lua.Lua_pushinteger(this.l, lua.Lua_Integer(value))
 }
 
-func (L *LuaStack) PushFloat32(value float32) {
-	C.lua_pushnumber(L, C.lua_Number(value))
+func (this *LuaStack) PushInt64(value int64) {
+	lua.Lua_pushnumber(this.l, lua.Lua_Number(value))
 }
 
-func (L *LuaStack) PushFloat64(value float64) {
-	C.lua_pushnumber(L, C.lua_Number(value))
+func (this *LuaStack) PushFloat32(value float32) {
+	lua.Lua_pushnumber(this.l, lua.Lua_Number(value))
 }
 
-func (L *LuaStack) PushString(value string) {
-	c_value := C.CString(value)
-	defer C.free(unsafe.Pointer(c_value))
-	C.lua_pushstring(L, c_value)
+func (this *LuaStack) PushFloat64(value float64) {
+	lua.Lua_pushnumber(this.l, lua.Lua_Number(value))
+}
+
+func (this *LuaStack) PushString(value string) {
+	lua.Lua_pushstring(this.l, value)
 }
 
 //
 // to value
 //
-
-func (L *LuaStack) ToBool(index int) bool {
-	if C.lua_toboolean(L, C.int(index)) != 0 {
-		return true
-	} else {
-		return false
-	}
+func (this *LuaStack) ToBool(index int) bool {
+	return lua.Lua_toboolean(this.l, index)
 }
 
-func (L *LuaStack) ToInt32(index int) int32 {
-	return int32(C.lua_tointeger(L, C.int(index)))
+func (this *LuaStack) ToInt(index int) int {
+	return int(lua.Lua_tointeger(this.l, index))
 }
 
-func (L *LuaStack) ToInt64(index int) int64 {
-	return int64(C.lua_tonumber(L, C.int(index)))
+func (this *LuaStack) ToInt32(index int) int32 {
+	return int32(lua.Lua_tointeger(this.l, index))
 }
 
-func (L *LuaStack) ToFloat32(index int) float32 {
-	return float32(C.lua_tonumber(L, C.int(index)))
+func (this *LuaStack) ToInt64(index int) int64 {
+	return int64(lua.Lua_tonumber(this.l, index))
 }
 
-func (L *LuaStack) ToFloat64(index int) float64 {
-	return float64(C.lua_tonumber(L, C.int(index)))
+func (this *LuaStack) ToFloat32(index int) float32 {
+	return float32(lua.Lua_tonumber(this.l, index))
 }
 
-func (L *LuaStack) ToString(index int) string {
-	return C.GoString(C.lua_tolstring(L, C.int(index), nil))
+func (this *LuaStack) ToFloat64(index int) float64 {
+	return float64(lua.Lua_tonumber(this.l, index))
+}
+
+func (this *LuaStack) ToString(index int) string {
+	return lua.Lua_tostring(this.l, index)
 }
 
 //
-func (L *LuaStack) GetTop() int {
-	return int(C.lua_gettop(L))
+func (this *LuaStack) GetTop() int {
+	return lua.Lua_gettop(this.l)
 }
 
-func (L *LuaStack) Clean() {
-	C.lua_settop(L, 0)
+func (this *LuaStack) Clean() {
+	lua.Lua_settop(this.l, 0)
 }
 
-func (L *LuaStack) FormatIndex(index int) int {
+func (this *LuaStack) FormatIndex(index int) int {
 	if index < 0 {
-		return int(C.lua_gettop(L)) + 1 + index
+		return this.GetTop() + 1 + index
 	} else {
 		return index
 	}
@@ -152,73 +145,38 @@ func (L *LuaStack) FormatIndex(index int) int {
 //
 // excute
 //
-const MULTRET int = C.LUA_MULTRET
-
-func (L *LuaStack) ExecuteGlobalFunction(funcname string, nargs, nresults int) {
-	L.GetGlobal(funcname)
+func (this *LuaStack) ExecuteGlobalFunction(funcname string, nargs, nresults int) {
+	lua.Lua_getglobal(this.l, funcname)
 	if nargs > 0 {
-		C.lua_insert(L, C.int(-(nargs + 1)))
+		lua.Lua_insert(this.l, -(nargs + 1))
 	}
-	L.execute(nargs, nresults)
+	this.execute(nargs, nresults)
 }
 
-func (L *LuaStack) ExecuteString(codes string) {
-	c_codes := C.CString(codes)
-	defer C.free(unsafe.Pointer(c_codes))
-	C.luaL_loadstring(L, c_codes)
-	L.execute(0, 0)
+func (this *LuaStack) ExecuteString(codes string) {
+	lua.LuaL_loadstring(this.l, codes)
+	this.execute(0, 0)
 }
 
-func (L *LuaStack) execute(nargs, nresults int) { // LUA_MULTRET
-	functionIndex := L.FormatIndex(-(nargs + 1))
+func (this *LuaStack) execute(nargs, nresults int) {
+	functionIndex := this.FormatIndex(-(nargs + 1))
 	traceback := 0
-	L.GetGlobal("__TRACKBACK__")
-	if C.lua_type(L, -1) == C.LUA_TFUNCTION {
-		C.lua_insert(L, C.int(functionIndex))
+	lua.Lua_getglobal(this.l, "__TRACKBACK__")
+	if lua.Lua_isfunction(this.l, -1) {
+		lua.Lua_insert(this.l, functionIndex)
 		traceback = functionIndex
 	} else {
-		L.Pop(1)
+		lua.Lua_pop(this.l, 1)
 	}
-	if C.lua_pcall(L, C.int(nargs), C.int(nresults), C.int(traceback)) != 0 {
-		err := L.ToString(-1)
+	if lua.Lua_pcall(this.l, nargs, nresults, traceback) != 0 {
+		err := lua.Lua_tostring(this.l, -1)
 		if traceback != 0 {
-			L.Pop(2)
+			lua.Lua_pop(this.l, 2)
 		} else {
-			L.Pop(1)
+			lua.Lua_pop(this.l, 1)
 		}
 		panic(err)
 	} else if traceback != 0 {
-		C.lua_remove(L, C.int(traceback))
+		lua.Lua_remove(this.l, traceback)
 	}
-}
-
-//
-//
-//
-func (L *LuaStack) GetField(index int, key string) {
-	c_key := C.CString(key)
-	defer C.free(unsafe.Pointer(c_key))
-	C.lua_getfield(L, C.int(index), c_key)
-}
-
-func (L *LuaStack) SetField(index int, key string) {
-	c_key := C.CString(key)
-	defer C.free(unsafe.Pointer(c_key))
-	C.lua_setfield(L, C.int(index), c_key)
-}
-
-func (L *LuaStack) GetGlobal(key string) {
-	c_key := C.CString(key)
-	defer C.free(unsafe.Pointer(c_key))
-	C.lua_getfield(L, C.LUA_GLOBALSINDEX, c_key)
-}
-
-func (L *LuaStack) SetGlobal(key string) {
-	c_key := C.CString(key)
-	defer C.free(unsafe.Pointer(c_key))
-	C.lua_setfield(L, C.LUA_GLOBALSINDEX, c_key)
-}
-
-func (L *LuaStack) Pop(n int) {
-	C.lua_settop(L, C.int(-n-1))
 }
