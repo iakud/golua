@@ -1,9 +1,6 @@
 package lua
 
 /*
-#cgo CFLAGS: -I${SRCDIR}/../include
-#cgo LDFLAGS: -L${SRCDIR}/../lib -lluajit -lmingwex
-
 #include <lua.h>
 #include <stdlib.h>
 

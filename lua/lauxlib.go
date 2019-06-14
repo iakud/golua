@@ -4,12 +4,9 @@ package lua
 #include <lauxlib.h>
 #include <stdlib.h>
 
-LUALIB_API int (LuaL_getn) (lua_State *L, int i) { return luaL_getn(L, i); }
-LUALIB_API void (LuaL_setn) (lua_State *L, int i, int j) { luaL_setn(L, i, j); }
 LUALIB_API int (LuaL_error) (lua_State *L, const char *s) { return luaL_error(L, s); }
 LUALIB_API void (LuaL_addchar) (luaL_Buffer *B, char c) { luaL_addchar(B, c); }
 LUALIB_API void (LuaL_addsize) (luaL_Buffer *B, int n) { luaL_addsize(B, n); }
-LUALIB_API int (Lua_ref) (lua_State *L, int lock) { return lua_ref(L, lock); }
 */
 import "C"
 
@@ -18,18 +15,15 @@ import (
 	"unsafe"
 )
 
-func LuaL_getn(L *Lua_State, i int) int { return int(C.LuaL_getn(L, C.int(i))) }
-func LuaL_setn(L *Lua_State, i, j int)  { C.LuaL_setn(L, C.int(i), C.int(j)) }
-
 /* extra error code for `luaL_load' */
 const LUA_ERRFILE int = LUA_ERRERR + 1
 
 type LuaL_Reg C.luaL_Reg
 
-func LuaI_openlib(L *Lua_State, libname string, l *LuaL_Reg, nup int) {
+func luaL_openlib(L *Lua_State, libname string, l *LuaL_Reg, nup int) {
 	c_libname := C.CString(libname)
 	defer C.free(unsafe.Pointer(c_libname))
-	C.luaI_openlib(L, c_libname, l, C.int(nup))
+	C.luaL_openlib(L, c_libname, l, C.int(nup))
 }
 func LuaL_register(L *Lua_State, libname string, l *LuaL_Reg) {
 	c_libname := C.CString(libname)
@@ -229,15 +223,3 @@ func LuaL_pushresult(B *LuaL_Buffer) { C.luaL_pushresult(B) }
 /* pre-defined references */
 const LUA_NOREF int = C.LUA_NOREF
 const LUA_REFNIL int = C.LUA_REFNIL
-
-func Lua_ref(L *Lua_State, lock bool) int {
-	if lock {
-		return int(C.Lua_ref(L, 1))
-	} else {
-		return int(C.Lua_ref(L, 0))
-	}
-}
-
-func Lua_unref(L *Lua_State, ref int) { LuaL_unref(L, LUA_REGISTRYINDEX, ref) }
-
-func Lua_getref(L *Lua_State, ref int) { Lua_rawgeti(L, LUA_REGISTRYINDEX, ref) }
