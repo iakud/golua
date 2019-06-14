@@ -87,10 +87,10 @@ const (
 const LUA_MINSTACK int = C.LUA_MINSTACK
 
 /* type of numbers in Lua */
-type Lua_Number LUA_NUMBER
+type Lua_Number float64
 
 /* type for integer functions */
-type Lua_Integer LUA_INTEGER
+type Lua_Integer int
 
 /*
 ** state manipulation

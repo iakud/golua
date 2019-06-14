@@ -2,6 +2,8 @@ package lua
 
 /*
 #include <lualib.h>
+
+void Lua_assert(int x) { lua_assert(x); }
 */
 import "C"
 
@@ -42,3 +44,5 @@ func Luaopen_package(L *Lua_State) int { return int(C.luaopen_package(L)) }
 
 /* open all previous libraries */
 func LuaL_openlibs(L *Lua_State) { C.luaL_openlibs(L) }
+
+func Lua_assert(x int) { C.Lua_assert(C.int(x)) }

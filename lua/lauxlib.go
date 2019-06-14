@@ -4,17 +4,12 @@ package lua
 #include <lauxlib.h>
 #include <stdlib.h>
 
-#if defined(luaL_getn)
-#undef luaL_getn
-LUALIB_API int luaL_getn(lua_State *L, int i) { return (int)lua_objlen(L, i); }
-#endif
-
-#if defined(luaL_setn)
-#undef luaL_setn
-LUALIB_API void luaL_setn(lua_State *L, int i, int j) { (void)0; }
-#endif
-
+LUALIB_API int (LuaL_getn) (lua_State *L, int i) { return luaL_getn(L, i); }
+LUALIB_API void (LuaL_setn) (lua_State *L, int i, int j) { luaL_setn(L, i, j); }
 LUALIB_API int (LuaL_error) (lua_State *L, const char *s) { return luaL_error(L, s); }
+LUALIB_API void (LuaL_addchar) (luaL_Buffer *B, char c) { luaL_addchar(B, c); }
+LUALIB_API void (LuaL_addsize) (luaL_Buffer *B, int n) { luaL_addsize(B, n); }
+LUALIB_API int (Lua_ref) (lua_State *L, int lock) { return lua_ref(L, lock); }
 */
 import "C"
 
@@ -23,8 +18,8 @@ import (
 	"unsafe"
 )
 
-func LuaL_getn(L *Lua_State, i int) int { return int(C.luaL_getn(L, C.int(i))) }
-func LuaL_setn(L *Lua_State, i, j int)  { C.luaL_setn(L, C.int(i), C.int(j)) }
+func LuaL_getn(L *Lua_State, i int) int { return int(C.LuaL_getn(L, C.int(i))) }
+func LuaL_setn(L *Lua_State, i, j int)  { C.LuaL_setn(L, C.int(i), C.int(j)) }
 
 /* extra error code for `luaL_load' */
 const LUA_ERRFILE int = LUA_ERRERR + 1
@@ -160,12 +155,89 @@ func LuaL_findtable(L *Lua_State, idx int, fname string, szhint int) string {
 ** ===============================================================
  */
 
-func LuaL_dofile(L *Lua_State, fn string) int {
-	if LuaL_loadfile(L, fn) != 0 {
-		return 1
+func LuaL_argcheck(L *Lua_State, cond bool, numarg int, extramsg string) {
+	if !cond {
+		LuaL_argerror(L, numarg, extramsg)
 	}
-	if Lua_pcall(L, 0, C.LUA_MULTRET, 0) != 0 {
-		return 1
-	}
-	return 0
 }
+func LuaL_checkstring(L *Lua_State, n int) string {
+	return C.GoString(C.luaL_checklstring(L, C.int(n), nil))
+}
+func LuaL_optstring(L *Lua_State, n int, d string) string {
+	c_d := C.CString(d)
+	defer C.free(unsafe.Pointer(c_d))
+	return C.GoString(C.luaL_optlstring(L, C.int(n), c_d, nil))
+}
+func LuaL_checkint(L *Lua_State, n int) int   { return int(LuaL_checkinteger(L, n)) }
+func LuaL_optint(L *Lua_State, n, d int) int  { return int(LuaL_optinteger(L, n, Lua_Integer(d))) }
+func LuaL_checklong(L *Lua_State, n int) int  { return int(LuaL_checkinteger(L, n)) }
+func LuaL_optlong(L *Lua_State, n, d int) int { return int(LuaL_optinteger(L, n, Lua_Integer(d))) }
+
+func LuaL_typename(L *Lua_State, i int) string { return Lua_typename(L, Lua_type(L, i)) }
+
+func LuaL_dofile(L *Lua_State, fn string) int {
+	if ret := LuaL_loadfile(L, fn); ret != 0 {
+		return ret
+	}
+	return Lua_pcall(L, 0, C.LUA_MULTRET, 0)
+}
+func LuaL_dostring(L *Lua_State, s string) int {
+	if ret := LuaL_loadstring(L, s); ret != 0 {
+		return ret
+	}
+	return Lua_pcall(L, 0, C.LUA_MULTRET, 0)
+}
+
+func LuaL_getmetatable(L *Lua_State, n string) { Lua_getfield(L, LUA_REGISTRYINDEX, n) }
+
+// #define luaL_opt(L,f,n,d)	(lua_isnoneornil(L,(n)) ? (d) : f(L,(n)))
+
+/*
+** {======================================================
+** Generic Buffer manipulation
+** =======================================================
+ */
+
+type LuaL_Buffer C.luaL_Buffer
+
+func LuaL_addchar(B *LuaL_Buffer, c byte) { C.LuaL_addchar(B, C.char(c)) }
+
+/* compatibility only */
+func LuaL_putchar(B *LuaL_Buffer, c byte) { LuaL_addchar(B, c) }
+
+func LuaL_addsize(B *LuaL_Buffer, n int) { C.LuaL_addsize(B, C.int(n)) }
+
+func LuaL_buffinit(L *Lua_State, B *LuaL_Buffer) { C.luaL_buffinit(L, B) }
+func LuaL_prepbuffer(B *LuaL_Buffer) string      { return C.GoString(C.luaL_prepbuffer(B)) }
+func LuaL_addlstring(B *LuaL_Buffer, s string) {
+	c_s := C.CString(s)
+	defer C.free(unsafe.Pointer(c_s))
+	C.luaL_addlstring(B, c_s, C.size_t(len(s)))
+}
+func LuaL_addstring(B *LuaL_Buffer, s string) {
+	c_s := C.CString(s)
+	defer C.free(unsafe.Pointer(c_s))
+	C.luaL_addstring(B, c_s)
+}
+func LuaL_addvalue(B *LuaL_Buffer)   { C.luaL_addvalue(B) }
+func LuaL_pushresult(B *LuaL_Buffer) { C.luaL_pushresult(B) }
+
+/* }====================================================== */
+
+/* compatibility with ref system */
+
+/* pre-defined references */
+const LUA_NOREF int = C.LUA_NOREF
+const LUA_REFNIL int = C.LUA_REFNIL
+
+func Lua_ref(L *Lua_State, lock bool) int {
+	if lock {
+		return int(C.Lua_ref(L, 1))
+	} else {
+		return int(C.Lua_ref(L, 0))
+	}
+}
+
+func Lua_unref(L *Lua_State, ref int) { LuaL_unref(L, LUA_REGISTRYINDEX, ref) }
+
+func Lua_getref(L *Lua_State, ref int) { Lua_rawgeti(L, LUA_REGISTRYINDEX, ref) }
