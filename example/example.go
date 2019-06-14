@@ -19,6 +19,7 @@ import (
 
 //export goAdd
 func goAdd(L *C.lua_State) int {
+	fmt.Printf("goAdd_go(): called\n")
 	a := lua.Lua_tointeger((*lua.Lua_State)(L), 1)
 	b := lua.Lua_tointeger((*lua.Lua_State)(L), 2)
 	lua.Lua_pushinteger((*lua.Lua_State)(L), a+b)
@@ -43,5 +44,5 @@ func main() {
 	}
 	result := lua.Lua_tonumber(L, -1)
 	lua.Lua_settop(L, 0)
-	fmt.Printf("%v+%v=%v", a, b, result)
+	fmt.Printf("%v+%v=%v\n", a, b, result)
 }
