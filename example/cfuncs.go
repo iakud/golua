@@ -1,7 +1,7 @@
 package main
 
 /*
-#include "lua.h"
+#include <lua.h>
 #include <stdio.h>
 
 // The gateway function

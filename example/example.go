@@ -1,11 +1,7 @@
 package main
 
 /*
-#cgo CFLAGS: -I${SRCDIR}/../include
-#cgo LDFLAGS: -L${SRCDIR}/../lib -lluajit -lmingwex
-
-#include "lua.h"
-#include <stdlib.h>
+#include <lua.h>
 int goAdd_cgo(lua_State* L);
 */
 import "C"
