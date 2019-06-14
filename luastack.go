@@ -17,6 +17,10 @@ func NewLuaStack() *LuaStack {
 	return luaStack
 }
 
+func (this *LuaStack) Close() {
+	lua.Lua_close(this.l)
+}
+
 func (this *LuaStack) OpenLibs() {
 	lua.LuaL_openlibs(this.l)
 }
@@ -24,8 +28,7 @@ func (this *LuaStack) OpenLibs() {
 func (this *LuaStack) AddPackagePath(path string) {
 	lua.Lua_getglobal(this.l, lua.LUA_LOADLIBNAME)
 	lua.Lua_getfield(this.l, -1, "path")
-	cur_path := lua.Lua_tostring(this.l, -1)
-	lua.Lua_pushstring(this.l, fmt.Sprintf("%s;%s/?.lua", cur_path, path))
+	lua.Lua_pushfstring(this.l, "%s;%s/?.lua", lua.Lua_tostring(this.l, -1), path)
 	lua.Lua_setfield(this.l, -3, "path")
 	lua.Lua_pop(this.l, 2)
 }
@@ -94,6 +97,10 @@ func (this *LuaStack) PushString(value string) {
 	lua.Lua_pushstring(this.l, value)
 }
 
+func (this *LuaStack) PushLString(value string) {
+	lua.Lua_pushlstring(this.l, value)
+}
+
 //
 // to value
 //
@@ -123,6 +130,10 @@ func (this *LuaStack) ToFloat64(index int) float64 {
 
 func (this *LuaStack) ToString(index int) string {
 	return lua.Lua_tostring(this.l, index)
+}
+
+func (this *LuaStack) ToLString(index int) string {
+	return lua.Lua_tolstring(this.l, index)
 }
 
 //

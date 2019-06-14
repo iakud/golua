@@ -6,10 +6,13 @@ package lua
 
 #include <lua.h>
 #include <stdlib.h>
+
+LUA_API const char *(Lua_pushfstring) (lua_State *L, const char *s) { return lua_pushfstring(L, s); }
 */
 import "C"
 
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -84,10 +87,10 @@ const (
 const LUA_MINSTACK int = C.LUA_MINSTACK
 
 /* type of numbers in Lua */
-type LUA_NUMBER Lua_Number
+type Lua_Number LUA_NUMBER
 
 /* type for integer functions */
-type LUA_INTEGER Lua_Integer
+type Lua_Integer LUA_INTEGER
 
 /*
 ** state manipulation
@@ -173,7 +176,11 @@ func Lua_pushstring(L *Lua_State, s string) {
 	defer C.free(unsafe.Pointer(c_s))
 	C.lua_pushstring(L, c_s)
 }
-
+func Lua_pushfstring(L *Lua_State, format string, a ...interface{}) string {
+	c_s := C.CString(fmt.Sprintf(format, a...))
+	defer C.free(unsafe.Pointer(c_s))
+	return C.GoString(C.Lua_pushfstring(L, c_s))
+}
 func Lua_pushcclosure(L *Lua_State, f Lua_CFunction, n int) { C.lua_pushcclosure(L, f, C.int(n)) }
 func Lua_pushboolean(L *Lua_State, b bool) {
 	if b {
@@ -182,12 +189,8 @@ func Lua_pushboolean(L *Lua_State, b bool) {
 		C.lua_pushboolean(L, 0)
 	}
 }
-func Lua_pushlightuserdata(L *Lua_State, p unsafe.Pointer) {
-	C.lua_pushlightuserdata(L, p)
-}
-func Lua_pushthread(L *Lua_State) int {
-	return int(C.lua_pushthread(L))
-}
+func Lua_pushlightuserdata(L *Lua_State, p unsafe.Pointer) { C.lua_pushlightuserdata(L, p) }
+func Lua_pushthread(L *Lua_State) int                      { return int(C.lua_pushthread(L)) }
 
 /*
 ** get functions (Lua -> stack)
@@ -198,12 +201,10 @@ func Lua_getfield(L *Lua_State, idx int, k string) {
 	defer C.free(unsafe.Pointer(c_k))
 	C.lua_getfield(L, C.int(idx), c_k)
 }
-func Lua_rawget(L *Lua_State, idx int)            { C.lua_rawget(L, C.int(idx)) }
-func Lua_rawgeti(L *Lua_State, idx, n int)        { C.lua_rawgeti(L, C.int(idx), C.int(n)) }
-func Lua_createtable(L *Lua_State, idx, nrec int) { C.lua_createtable(L, C.int(idx), C.int(nrec)) }
-func Lua_newuserdata(L *Lua_State, sz uint) unsafe.Pointer {
-	return C.lua_newuserdata(L, C.size_t(sz))
-}
+func Lua_rawget(L *Lua_State, idx int)                     { C.lua_rawget(L, C.int(idx)) }
+func Lua_rawgeti(L *Lua_State, idx, n int)                 { C.lua_rawgeti(L, C.int(idx), C.int(n)) }
+func Lua_createtable(L *Lua_State, idx, nrec int)          { C.lua_createtable(L, C.int(idx), C.int(nrec)) }
+func Lua_newuserdata(L *Lua_State, sz uint) unsafe.Pointer { return C.lua_newuserdata(L, C.size_t(sz)) }
 func Lua_getmetatable(L *Lua_State, objindex int) int {
 	return int(C.lua_getmetatable(L, C.int(objindex)))
 }
@@ -296,9 +297,7 @@ func Lua_register(L *Lua_State, n string, f Lua_CFunction) {
 	Lua_setglobal(L, n)
 }
 
-func Lua_pushcfunction(L *Lua_State, f Lua_CFunction) {
-	Lua_pushcclosure(L, f, 0)
-}
+func Lua_pushcfunction(L *Lua_State, f Lua_CFunction) { Lua_pushcclosure(L, f, 0) }
 
 func Lua_strlen(L *Lua_State, i int) uint { return Lua_objlen(L, i) }
 
@@ -316,7 +315,7 @@ func Lua_pushliteral(L *Lua_State, s string) { Lua_pushlstring(L, s) }
 func Lua_setglobal(L *Lua_State, s string) { Lua_setfield(L, LUA_GLOBALSINDEX, s) }
 func Lua_getglobal(L *Lua_State, s string) { Lua_getfield(L, LUA_GLOBALSINDEX, s) }
 
-func Lua_tostring(L *Lua_State, i int) string { return Lua_tolstring(L, i) }
+func Lua_tostring(L *Lua_State, i int) string { return C.GoString(C.lua_tolstring(L, C.int(i), nil)) }
 
 /*
 ** compatibility macros and functions
