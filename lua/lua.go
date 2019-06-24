@@ -95,160 +95,194 @@ type Lua_Integer int
 func Lua_newstate(f Lua_Alloc, ud unsafe.Pointer) *Lua_State {
 	return (*Lua_State)(C.lua_newstate(f, ud))
 }
-func Lua_close(L *Lua_State)                { C.lua_close(L) }
-func Lua_newthread(L *Lua_State) *Lua_State { return (*Lua_State)(C.lua_newthread(L)) }
+func Lua_close(L *Lua_State)                { C.lua_close((*C.lua_State)(L)) }
+func Lua_newthread(L *Lua_State) *Lua_State { return (*Lua_State)(C.lua_newthread((*C.lua_State)(L))) }
 
 func Lua_atpanic(L *Lua_State, panicf Lua_CFunction) Lua_CFunction {
-	return Lua_CFunction(C.lua_atpanic(L, panicf))
+	return Lua_CFunction(C.lua_atpanic((*C.lua_State)(L), panicf))
 }
 
 /*
 ** basic stack manipulation
  */
-func Lua_gettop(L *Lua_State) int             { return int(C.lua_gettop(L)) }
-func Lua_settop(L *Lua_State, idx int)        { C.lua_settop(L, C.int(idx)) }
-func Lua_pushvalue(L *Lua_State, idx int)     { C.lua_pushvalue(L, C.int(idx)) }
-func Lua_remove(L *Lua_State, idx int)        { C.lua_remove(L, C.int(idx)) }
-func Lua_insert(L *Lua_State, idx int)        { C.lua_insert(L, C.int(idx)) }
-func Lua_replace(L *Lua_State, idx int)       { C.lua_replace(L, C.int(idx)) }
-func Lua_checkstack(L *Lua_State, sz int) int { return int(C.lua_checkstack(L, C.int(sz))) }
+func Lua_gettop(L *Lua_State) int         { return int(C.lua_gettop((*C.lua_State)(L))) }
+func Lua_settop(L *Lua_State, idx int)    { C.lua_settop((*C.lua_State)(L), C.int(idx)) }
+func Lua_pushvalue(L *Lua_State, idx int) { C.lua_pushvalue((*C.lua_State)(L), C.int(idx)) }
+func Lua_remove(L *Lua_State, idx int)    { C.lua_remove((*C.lua_State)(L), C.int(idx)) }
+func Lua_insert(L *Lua_State, idx int)    { C.lua_insert((*C.lua_State)(L), C.int(idx)) }
+func Lua_replace(L *Lua_State, idx int)   { C.lua_replace((*C.lua_State)(L), C.int(idx)) }
+func Lua_checkstack(L *Lua_State, sz int) int {
+	return int(C.lua_checkstack((*C.lua_State)(L), C.int(sz)))
+}
 
-func Lua_xmove(from, to *Lua_State, n int) { C.lua_xmove(from, to, C.int(n)) }
+func Lua_xmove(from, to *Lua_State, n int) {
+	C.lua_xmove((*C.lua_State)(from), (*C.lua_State)(to), C.int(n))
+}
 
 /*
 ** access functions (stack -> C)
  */
-func Lua_isnumber(L *Lua_State, idx int) int    { return int(C.lua_isnumber(L, C.int(idx))) }
-func Lua_isstring(L *Lua_State, idx int) int    { return int(C.lua_isstring(L, C.int(idx))) }
-func Lua_iscfunction(L *Lua_State, idx int) int { return int(C.lua_iscfunction(L, C.int(idx))) }
-func Lua_isuserdata(L *Lua_State, idx int) int  { return int(C.lua_isuserdata(L, C.int(idx))) }
-func Lua_type(L *Lua_State, idx int) int        { return int(C.lua_type(L, C.int(idx))) }
-func Lua_typename(L *Lua_State, tp int) string  { return C.GoString(C.lua_typename(L, C.int(tp))) }
+func Lua_isnumber(L *Lua_State, idx int) int {
+	return int(C.lua_isnumber((*C.lua_State)(L), C.int(idx)))
+}
+func Lua_isstring(L *Lua_State, idx int) int {
+	return int(C.lua_isstring((*C.lua_State)(L), C.int(idx)))
+}
+func Lua_iscfunction(L *Lua_State, idx int) int {
+	return int(C.lua_iscfunction((*C.lua_State)(L), C.int(idx)))
+}
+func Lua_isuserdata(L *Lua_State, idx int) int {
+	return int(C.lua_isuserdata((*C.lua_State)(L), C.int(idx)))
+}
+func Lua_type(L *Lua_State, idx int) int { return int(C.lua_type((*C.lua_State)(L), C.int(idx))) }
+func Lua_typename(L *Lua_State, tp int) string {
+	return C.GoString(C.lua_typename((*C.lua_State)(L), C.int(tp)))
+}
 
-func Lua_equal(L *Lua_State, idx1, idx2 int) int { return int(C.lua_equal(L, C.int(idx1), C.int(idx2))) }
+func Lua_equal(L *Lua_State, idx1, idx2 int) int {
+	return int(C.lua_equal((*C.lua_State)(L), C.int(idx1), C.int(idx2)))
+}
 func Lua_rawequal(L *Lua_State, idx1, idx2 int) int {
-	return int(C.lua_rawequal(L, C.int(idx1), C.int(idx2)))
+	return int(C.lua_rawequal((*C.lua_State)(L), C.int(idx1), C.int(idx2)))
 }
 func Lua_lessthan(L *Lua_State, idx1, idx2 int) int {
-	return int(C.lua_lessthan(L, C.int(idx1), C.int(idx2)))
+	return int(C.lua_lessthan((*C.lua_State)(L), C.int(idx1), C.int(idx2)))
 }
 
-func Lua_tonumber(L *Lua_State, idx int) Lua_Number { return Lua_Number(C.lua_tonumber(L, C.int(idx))) }
-func Lua_tointeger(L *Lua_State, idx int) Lua_Integer {
-	return Lua_Integer(C.lua_tointeger(L, C.int(idx)))
+func Lua_tonumber(L *Lua_State, idx int) Lua_Number {
+	return Lua_Number(C.lua_tonumber((*C.lua_State)(L), C.int(idx)))
 }
-func Lua_toboolean(L *Lua_State, idx int) bool { return C.lua_toboolean(L, C.int(idx)) != 0 }
+func Lua_tointeger(L *Lua_State, idx int) Lua_Integer {
+	return Lua_Integer(C.lua_tointeger((*C.lua_State)(L), C.int(idx)))
+}
+func Lua_toboolean(L *Lua_State, idx int) bool {
+	return C.lua_toboolean((*C.lua_State)(L), C.int(idx)) != 0
+}
 func Lua_tolstring(L *Lua_State, idx int) string {
 	var l C.size_t
-	c_s := C.lua_tolstring(L, C.int(idx), &l)
+	c_s := C.lua_tolstring((*C.lua_State)(L), C.int(idx), &l)
 	return C.GoStringN(c_s, C.int(l))
 }
-func Lua_objlen(L *Lua_State, idx int) uint { return uint(C.lua_objlen(L, C.int(idx))) }
+func Lua_objlen(L *Lua_State, idx int) uint { return uint(C.lua_objlen((*C.lua_State)(L), C.int(idx))) }
 func Lua_tocfunction(L *Lua_State, idx int) Lua_CFunction {
-	return Lua_CFunction(C.lua_tocfunction(L, C.int(idx)))
+	return Lua_CFunction(C.lua_tocfunction((*C.lua_State)(L), C.int(idx)))
 }
 func Lua_touserdata(L *Lua_State, idx int) unsafe.Pointer {
-	return unsafe.Pointer(C.lua_touserdata(L, C.int(idx)))
+	return unsafe.Pointer(C.lua_touserdata((*C.lua_State)(L), C.int(idx)))
 }
 func Lua_tothread(L *Lua_State, idx int) *Lua_State {
-	return (*Lua_State)(C.lua_tothread(L, C.int(idx)))
+	return (*Lua_State)(C.lua_tothread((*C.lua_State)(L), C.int(idx)))
 }
 func Lua_topointer(L *Lua_State, idx int) unsafe.Pointer {
-	return unsafe.Pointer(C.lua_topointer(L, C.int(idx)))
+	return unsafe.Pointer(C.lua_topointer((*C.lua_State)(L), C.int(idx)))
 }
 
 /*
 ** push functions (C -> stack)
  */
-func Lua_pushnil(L *Lua_State)                    { C.lua_pushnil(L) }
-func Lua_pushnumber(L *Lua_State, n Lua_Number)   { C.lua_pushnumber(L, C.lua_Number(n)) }
-func Lua_pushinteger(L *Lua_State, n Lua_Integer) { C.lua_pushinteger(L, C.lua_Integer(n)) }
+func Lua_pushnil(L *Lua_State)                  { C.lua_pushnil((*C.lua_State)(L)) }
+func Lua_pushnumber(L *Lua_State, n Lua_Number) { C.lua_pushnumber((*C.lua_State)(L), C.lua_Number(n)) }
+func Lua_pushinteger(L *Lua_State, n Lua_Integer) {
+	C.lua_pushinteger((*C.lua_State)(L), C.lua_Integer(n))
+}
 func Lua_pushlstring(L *Lua_State, s string) {
 	c_s := C.CString(s)
 	defer C.free(unsafe.Pointer(c_s))
-	C.lua_pushlstring(L, c_s, C.size_t(len(s)))
+	C.lua_pushlstring((*C.lua_State)(L), c_s, C.size_t(len(s)))
 }
 func Lua_pushstring(L *Lua_State, s string) {
 	c_s := C.CString(s)
 	defer C.free(unsafe.Pointer(c_s))
-	C.lua_pushstring(L, c_s)
+	C.lua_pushstring((*C.lua_State)(L), c_s)
 }
 func Lua_pushfstring(L *Lua_State, format string, a ...interface{}) string {
 	c_s := C.CString(fmt.Sprintf(format, a...))
 	defer C.free(unsafe.Pointer(c_s))
-	return C.GoString(C.Lua_pushfstring(L, c_s))
+	return C.GoString(C.Lua_pushfstring((*C.lua_State)(L), c_s))
 }
-func Lua_pushcclosure(L *Lua_State, f Lua_CFunction, n int) { C.lua_pushcclosure(L, f, C.int(n)) }
+func Lua_pushcclosure(L *Lua_State, f Lua_CFunction, n int) {
+	C.lua_pushcclosure((*C.lua_State)(L), f, C.int(n))
+}
 func Lua_pushboolean(L *Lua_State, b bool) {
 	if b {
-		C.lua_pushboolean(L, 1)
+		C.lua_pushboolean((*C.lua_State)(L), 1)
 	} else {
-		C.lua_pushboolean(L, 0)
+		C.lua_pushboolean((*C.lua_State)(L), 0)
 	}
 }
-func Lua_pushlightuserdata(L *Lua_State, p unsafe.Pointer) { C.lua_pushlightuserdata(L, p) }
-func Lua_pushthread(L *Lua_State) int                      { return int(C.lua_pushthread(L)) }
+func Lua_pushlightuserdata(L *Lua_State, p unsafe.Pointer) {
+	C.lua_pushlightuserdata((*C.lua_State)(L), p)
+}
+func Lua_pushthread(L *Lua_State) int { return int(C.lua_pushthread((*C.lua_State)(L))) }
 
 /*
 ** get functions (Lua -> stack)
  */
-func Lua_gettable(L *Lua_State, idx int) { C.lua_gettable(L, C.int(idx)) }
+func Lua_gettable(L *Lua_State, idx int) { C.lua_gettable((*C.lua_State)(L), C.int(idx)) }
 func Lua_getfield(L *Lua_State, idx int, k string) {
 	c_k := C.CString(k)
 	defer C.free(unsafe.Pointer(c_k))
-	C.lua_getfield(L, C.int(idx), c_k)
+	C.lua_getfield((*C.lua_State)(L), C.int(idx), c_k)
 }
-func Lua_rawget(L *Lua_State, idx int)                     { C.lua_rawget(L, C.int(idx)) }
-func Lua_rawgeti(L *Lua_State, idx, n int)                 { C.lua_rawgeti(L, C.int(idx), C.int(n)) }
-func Lua_createtable(L *Lua_State, idx, nrec int)          { C.lua_createtable(L, C.int(idx), C.int(nrec)) }
-func Lua_newuserdata(L *Lua_State, sz uint) unsafe.Pointer { return C.lua_newuserdata(L, C.size_t(sz)) }
+func Lua_rawget(L *Lua_State, idx int)     { C.lua_rawget((*C.lua_State)(L), C.int(idx)) }
+func Lua_rawgeti(L *Lua_State, idx, n int) { C.lua_rawgeti((*C.lua_State)(L), C.int(idx), C.int(n)) }
+func Lua_createtable(L *Lua_State, idx, nrec int) {
+	C.lua_createtable((*C.lua_State)(L), C.int(idx), C.int(nrec))
+}
+func Lua_newuserdata(L *Lua_State, sz uint) unsafe.Pointer {
+	return C.lua_newuserdata((*C.lua_State)(L), C.size_t(sz))
+}
 func Lua_getmetatable(L *Lua_State, objindex int) int {
-	return int(C.lua_getmetatable(L, C.int(objindex)))
+	return int(C.lua_getmetatable((*C.lua_State)(L), C.int(objindex)))
 }
-func Lua_getfenv(L *Lua_State, idx int) { C.lua_getfenv(L, C.int(idx)) }
+func Lua_getfenv(L *Lua_State, idx int) { C.lua_getfenv((*C.lua_State)(L), C.int(idx)) }
 
 /*
 ** set functions (stack -> Lua)
  */
-func Lua_settable(L *Lua_State, idx int) { C.lua_settable(L, C.int(idx)) }
+func Lua_settable(L *Lua_State, idx int) { C.lua_settable((*C.lua_State)(L), C.int(idx)) }
 func Lua_setfield(L *Lua_State, idx int, k string) {
 	c_k := C.CString(k)
 	defer C.free(unsafe.Pointer(c_k))
-	C.lua_setfield(L, C.int(idx), c_k)
+	C.lua_setfield((*C.lua_State)(L), C.int(idx), c_k)
 }
-func Lua_rawset(L *Lua_State, idx int)     { C.lua_rawset(L, C.int(idx)) }
-func Lua_rawseti(L *Lua_State, idx, n int) { C.lua_rawseti(L, C.int(idx), C.int(n)) }
+func Lua_rawset(L *Lua_State, idx int)     { C.lua_rawset((*C.lua_State)(L), C.int(idx)) }
+func Lua_rawseti(L *Lua_State, idx, n int) { C.lua_rawseti((*C.lua_State)(L), C.int(idx), C.int(n)) }
 func Lua_setmetatable(L *Lua_State, objindex int) int {
-	return int(C.lua_setmetatable(L, C.int(objindex)))
+	return int(C.lua_setmetatable((*C.lua_State)(L), C.int(objindex)))
 }
-func Lua_setfenv(L *Lua_State, idx int) int { return int(C.lua_setfenv(L, C.int(idx))) }
+func Lua_setfenv(L *Lua_State, idx int) int { return int(C.lua_setfenv((*C.lua_State)(L), C.int(idx))) }
 
 /*
 ** `load' and `call' functions (load and run Lua code)
  */
-func Lua_call(L *Lua_State, nargs int, nresults int) { C.lua_call(L, C.int(nargs), C.int(nresults)) }
+func Lua_call(L *Lua_State, nargs int, nresults int) {
+	C.lua_call((*C.lua_State)(L), C.int(nargs), C.int(nresults))
+}
 func Lua_pcall(L *Lua_State, nargs int, nresults int, errfunc int) int {
-	return int(C.lua_pcall(L, C.int(nargs), C.int(nresults), C.int(errfunc)))
+	return int(C.lua_pcall((*C.lua_State)(L), C.int(nargs), C.int(nresults), C.int(errfunc)))
 }
 func Lua_cpcall(L *Lua_State, f Lua_CFunction, ud unsafe.Pointer) int {
-	return int(C.lua_cpcall(L, f, ud))
+	return int(C.lua_cpcall((*C.lua_State)(L), f, ud))
 }
 func Lua_load(L *Lua_State, reader Lua_Reader, dt unsafe.Pointer, chunkname string) int {
 	c_chunkname := C.CString(chunkname)
 	defer C.free(unsafe.Pointer(c_chunkname))
-	return int(C.lua_load(L, reader, dt, c_chunkname))
+	return int(C.lua_load((*C.lua_State)(L), reader, dt, c_chunkname))
 }
 
 func Lua_dump(L *Lua_State, writer Lua_Writer, data unsafe.Pointer) int {
-	return int(C.lua_dump(L, writer, data))
+	return int(C.lua_dump((*C.lua_State)(L), writer, data))
 }
 
 /*
 ** coroutine functions
  */
-func Lua_yield(L *Lua_State, nresults int) int { return int(C.lua_yield(L, C.int(nresults))) }
-func Lua_resume(L *Lua_State, narg int) int    { return int(C.lua_resume(L, C.int(narg))) }
-func Lua_status(L *Lua_State) int              { return int(C.lua_status(L)) }
+func Lua_yield(L *Lua_State, nresults int) int {
+	return int(C.lua_yield((*C.lua_State)(L), C.int(nresults)))
+}
+func Lua_resume(L *Lua_State, narg int) int { return int(C.lua_resume((*C.lua_State)(L), C.int(narg))) }
+func Lua_status(L *Lua_State) int           { return int(C.lua_status((*C.lua_State)(L))) }
 
 /*
 ** garbage-collection function and options
@@ -264,21 +298,25 @@ const (
 	LUA_GCSETSTEPMUL int = C.LUA_GCSETSTEPMUL
 )
 
-func Lua_gc(L *Lua_State, what, data int) int { return int(C.lua_gc(L, C.int(what), C.int(data))) }
+func Lua_gc(L *Lua_State, what, data int) int {
+	return int(C.lua_gc((*C.lua_State)(L), C.int(what), C.int(data)))
+}
 
 /*
 ** miscellaneous functions
  */
-func Lua_error(L *Lua_State) int { return int(C.lua_error(L)) }
+func Lua_error(L *Lua_State) int { return int(C.lua_error((*C.lua_State)(L))) }
 
-func Lua_next(L *Lua_State, idx int) int { return int(C.lua_next(L, C.int(idx))) }
+func Lua_next(L *Lua_State, idx int) int { return int(C.lua_next((*C.lua_State)(L), C.int(idx))) }
 
-func Lua_concat(L *Lua_State, n int) { C.lua_concat(L, C.int(n)) }
+func Lua_concat(L *Lua_State, n int) { C.lua_concat((*C.lua_State)(L), C.int(n)) }
 
 func Lua_getallocf(L *Lua_State, ud *unsafe.Pointer) Lua_Alloc {
-	return Lua_Alloc(C.lua_getallocf(L, ud))
+	return Lua_Alloc(C.lua_getallocf((*C.lua_State)(L), ud))
 }
-func Lua_setallocf(L *Lua_State, f Lua_Alloc, ud unsafe.Pointer) { C.lua_setallocf(L, f, ud) }
+func Lua_setallocf(L *Lua_State, f Lua_Alloc, ud unsafe.Pointer) {
+	C.lua_setallocf((*C.lua_State)(L), f, ud)
+}
 
 /*
 ** ===============================================================
@@ -312,7 +350,9 @@ func Lua_pushliteral(L *Lua_State, s string) { Lua_pushlstring(L, s) }
 func Lua_setglobal(L *Lua_State, s string) { Lua_setfield(L, LUA_GLOBALSINDEX, s) }
 func Lua_getglobal(L *Lua_State, s string) { Lua_getfield(L, LUA_GLOBALSINDEX, s) }
 
-func Lua_tostring(L *Lua_State, i int) string { return C.GoString(C.lua_tolstring(L, C.int(i), nil)) }
+func Lua_tostring(L *Lua_State, i int) string {
+	return C.GoString(C.lua_tolstring((*C.lua_State)(L), C.int(i), nil))
+}
 
 /*
 ** compatibility macros and functions
@@ -363,29 +403,29 @@ type Lua_Debug C.lua_Debug /* activation record */
 type Lua_Hook C.lua_Hook
 
 func Lua_getstack(L *Lua_State, level int, ar *Lua_Debug) int {
-	return int(C.lua_getstack(L, C.int(level), ar))
+	return int(C.lua_getstack((*C.lua_State)(L), C.int(level), (*C.lua_Debug)(ar)))
 }
 func Lua_getinfo(L *Lua_State, what string, ar *Lua_Debug) int {
 	c_what := C.CString(what)
 	defer C.free(unsafe.Pointer(c_what))
-	return int(C.lua_getinfo(L, c_what, ar))
+	return int(C.lua_getinfo((*C.lua_State)(L), c_what, (*C.lua_Debug)(ar)))
 }
 func Lua_getlocal(L *Lua_State, ar *Lua_Debug, n int) string {
-	return C.GoString(C.lua_getlocal(L, ar, C.int(n)))
+	return C.GoString(C.lua_getlocal((*C.lua_State)(L), (*C.lua_Debug)(ar), C.int(n)))
 }
 func Lua_setlocal(L *Lua_State, ar *Lua_Debug, n int) string {
-	return C.GoString(C.lua_setlocal(L, ar, C.int(n)))
+	return C.GoString(C.lua_setlocal((*C.lua_State)(L), (*C.lua_Debug)(ar), C.int(n)))
 }
 func Lua_getupvalue(L *Lua_State, funcindex int, n int) string {
-	return C.GoString(C.lua_getupvalue(L, C.int(funcindex), C.int(n)))
+	return C.GoString(C.lua_getupvalue((*C.lua_State)(L), C.int(funcindex), C.int(n)))
 }
 func Lua_setupvalue(L *Lua_State, funcindex int, n int) string {
-	return C.GoString(C.lua_setupvalue(L, C.int(funcindex), C.int(n)))
+	return C.GoString(C.lua_setupvalue((*C.lua_State)(L), C.int(funcindex), C.int(n)))
 }
 
 func Lua_sethook(L *Lua_State, f Lua_Hook, mask int, count int) int {
-	return int(C.lua_sethook(L, f, C.int(mask), C.int(count)))
+	return int(C.lua_sethook((*C.lua_State)(L), C.lua_Hook(f), C.int(mask), C.int(count)))
 }
-func Lua_gethook(L *Lua_State) Lua_Hook { return Lua_Hook(C.lua_gethook(L)) }
-func lua_gethookmask(L *Lua_State) int  { return int(C.lua_gethookmask(L)) }
-func lua_gethookcount(L *Lua_State) int { return int(C.lua_gethookcount(L)) }
+func Lua_gethook(L *Lua_State) Lua_Hook { return Lua_Hook(C.lua_gethook((*C.lua_State)(L))) }
+func lua_gethookmask(L *Lua_State) int  { return int(C.lua_gethookmask((*C.lua_State)(L))) }
+func lua_gethookcount(L *Lua_State) int { return int(C.lua_gethookcount((*C.lua_State)(L))) }
