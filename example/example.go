@@ -24,19 +24,20 @@ func (this *ClassA) getMessage() string {
 }
 
 //export lua_ClassA_getMessage
-func lua_ClassA_getMessage(L *C.lua_State) int {
-	a := (*ClassA)(tolua.ToUserType((*lua.Lua_State)(L), 1, "ClassA"))
+func lua_ClassA_getMessage(l *C.lua_State) int {
+	L := (*lua.Lua_State)(l)
+	a := (*ClassA)(tolua.ToUserType(L, 1, "ClassA"))
 	if a == nil {
-		lua.LuaL_error((*lua.Lua_State)(L), "invalid 'obj' in function '%s'", "lua_ClassA_getMessage")
+		lua.LuaL_error(L, "invalid 'obj' in function '%s'", "lua_ClassA_getMessage")
 		return 0
 	}
-	argc := lua.Lua_gettop((*lua.Lua_State)(L)) - 1
+	argc := lua.Lua_gettop(L) - 1
 	if argc == 0 {
 		message := a.getMessage()
-		lua.Lua_pushstring((*lua.Lua_State)(L), message)
+		lua.Lua_pushstring(L, message)
 		return 1
 	}
-	lua.LuaL_error((*lua.Lua_State)(L), "'%s' has wrong number of arguments: %d, was expecting %d \n", "lua_ClassA_getMessage", argc, 1)
+	lua.LuaL_error(L, "'%s' has wrong number of arguments: %d, was expecting %d \n", "lua_ClassA_getMessage", argc, 1)
 	return 0
 }
 
