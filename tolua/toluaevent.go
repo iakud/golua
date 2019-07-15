@@ -79,7 +79,7 @@ import (
 	"github.com/iakud/luago/lua"
 )
 
-func tolua_classevents(L *lua.Lua_State) {
+func classevents(L *lua.Lua_State) {
 	lua.Lua_pushstring(L, "__index")
 	lua.Lua_pushcfunction(L, (lua.Lua_CFunction)(C.class_index_event))
 	lua.Lua_rawset(L, -3)
@@ -88,7 +88,7 @@ func tolua_classevents(L *lua.Lua_State) {
 	lua.Lua_rawset(L, -3)
 }
 
-func tolua_collector(L *lua.Lua_State, col lua.Lua_CFunction) {
+func collector(L *lua.Lua_State, col lua.Lua_CFunction) {
 	lua.Lua_pushstring(L, "__gc")
 	lua.Lua_pushcfunction(L, col)
 	lua.Lua_rawset(L, -3)

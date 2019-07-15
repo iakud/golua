@@ -73,17 +73,17 @@ func Function(L *lua.Lua_State, name string, f lua.Lua_CFunction) {
 	lua.Lua_rawset(L, -3)
 }
 
-func tolua_usertype(L *lua.Lua_State, name string, col lua.Lua_CFunction) {
+func UserType(L *lua.Lua_State, name string, col lua.Lua_CFunction) {
 	if lua.LuaL_newmetatable(L, name) > 0 {
-		tolua_classevents(L)
+		classevents(L)
 		if col != nil {
-			tolua_collector(L, col)
+			collector(L, col)
 		}
 	}
 	lua.Lua_pop(L, 1)
 }
 
-func tolua_inheritance(L *lua.Lua_State, name, base string) {
+func inheritance(L *lua.Lua_State, name, base string) {
 	lua.LuaL_getmetatable(L, name)
 	if lua.Lua_isnil(L, -1) {
 		lua.Lua_pop(L, 1)
@@ -121,7 +121,7 @@ func tolua_inheritance(L *lua.Lua_State, name, base string) {
 	lua.Lua_pop(L, 1)
 }
 
-func tolua_super(L *lua.Lua_State, name, base string) {
+func super(L *lua.Lua_State, name, base string) {
 	if len(base) > 0 {
 		lua.Lua_getfield(L, lua.LUA_REGISTRYINDEX, "tolua_super")
 		lua.LuaL_getmetatable(L, base)
@@ -162,7 +162,7 @@ func tolua_super(L *lua.Lua_State, name, base string) {
 	lua.Lua_pop(L, 2)
 }
 
-func tolua_usertable(L *lua.Lua_State, lname, name string) {
+func usertable(L *lua.Lua_State, lname, name string) {
 	lua.Lua_newtable(L)
 	lua.LuaL_getmetatable(L, name)
 	lua.Lua_setmetatable(L, -2)
@@ -177,21 +177,21 @@ func tolua_usertable(L *lua.Lua_State, lname, name string) {
 	lua.Lua_pop(L, 1)
 }
 
-func tolua_class(L *lua.Lua_State, lname, name, base string) {
-	tolua_inheritance(L, name, base)
-	tolua_super(L, name, base)
-	tolua_usertable(L, lname, name)
+func Class(L *lua.Lua_State, lname, name, base string) {
+	inheritance(L, name, base)
+	super(L, name, base)
+	usertable(L, lname, name)
 }
 
-func tolua_beginusertype(L *lua.Lua_State, name string) {
+func BeginUserType(L *lua.Lua_State, name string) {
 	lua.LuaL_getmetatable(L, name)
 }
 
-func tolua_endusertype(L *lua.Lua_State) {
+func EndUserType(L *lua.Lua_State) {
 	lua.Lua_pop(L, 1)
 }
 
-func tolua_isusertable(L *lua.Lua_State, index int, name string) int {
+func IsUserTable(L *lua.Lua_State, index int, name string) bool {
 	lua.Lua_pushvalue(L, index)
 	lua.Lua_getfield(L, lua.LUA_REGISTRYINDEX, "tolua_usertable")
 	lua.Lua_insert(L, -2)
@@ -202,17 +202,17 @@ func tolua_isusertable(L *lua.Lua_State, index int, name string) int {
 			lua.LuaL_getmetatable(L, name)
 			if lua.Lua_rawequal(L, -1, -2) != 0 {
 				lua.Lua_pop(L, 2)
-				return 1
+				return true
 			}
 			lua.Lua_pop(L, 2)
 		}
 	} else {
 		lua.Lua_pop(L, 2)
 	}
-	return 0
+	return false
 }
 
-func tolua_pushusertype(L *lua.Lua_State, p unsafe.Pointer, name string) {
+func PushUserType(L *lua.Lua_State, p unsafe.Pointer, name string) {
 	if p == nil {
 		lua.Lua_pushnil(L)
 		return
@@ -265,7 +265,7 @@ func tolua_pushusertype(L *lua.Lua_State, p unsafe.Pointer, name string) {
 	}
 }
 
-func tolua_tousertype(L *lua.Lua_State, index int, name string) unsafe.Pointer {
+func ToUserType(L *lua.Lua_State, index int, name string) unsafe.Pointer {
 	if !lua.Lua_isuserdata(L, index) {
 		return nil
 	}
@@ -298,7 +298,7 @@ func tolua_tousertype(L *lua.Lua_State, index int, name string) unsafe.Pointer {
 	return nil
 }
 
-func tolua_removeusertype(L *lua.Lua_State, p unsafe.Pointer, name string) {
+func RemoveUserType(L *lua.Lua_State, p unsafe.Pointer, name string) {
 	if p == nil {
 		return
 	}

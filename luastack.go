@@ -2,8 +2,10 @@ package lua
 
 import (
 	"fmt"
+	"unsafe"
 
 	"github.com/iakud/luago/lua"
+	"github.com/iakud/luago/tolua"
 )
 
 type LuaStack struct {
@@ -101,6 +103,10 @@ func (this *LuaStack) PushLString(value string) {
 	lua.Lua_pushlstring(this.l, value)
 }
 
+func (this *LuaStack) PushUserType(p unsafe.Pointer, name string) {
+	tolua.PushUserType(this.l, p, name)
+}
+
 //
 // to value
 //
@@ -134,6 +140,10 @@ func (this *LuaStack) ToString(index int) string {
 
 func (this *LuaStack) ToLString(index int) string {
 	return lua.Lua_tolstring(this.l, index)
+}
+
+func (this *LuaStack) ToUserType(index int, name string) unsafe.Pointer {
+	return tolua.ToUserType(this.l, index, name)
 }
 
 //
