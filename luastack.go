@@ -1,4 +1,4 @@
-package lua
+package luago
 
 import (
 	"fmt"
@@ -21,6 +21,10 @@ func NewLuaStack() *LuaStack {
 
 func (this *LuaStack) Close() {
 	lua.Lua_close(this.l)
+}
+
+func (this *LuaStack) GetLuaState() *lua.Lua_State {
+	return this.l
 }
 
 func (this *LuaStack) OpenLibs() {

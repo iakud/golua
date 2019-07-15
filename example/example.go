@@ -2,51 +2,113 @@ package main
 
 /*
 #include <lua.h>
-int goAdd_cgo(lua_State* L);
+int lua_ClassA_getMessage_cgo(lua_State* L);
 */
 import "C"
 
 import (
-	"errors"
 	"fmt"
+	"unsafe"
 
+	"github.com/iakud/luago"
 	"github.com/iakud/luago/lua"
+	"github.com/iakud/luago/tolua"
 )
 
-//export goAdd
-func goAdd(L *C.lua_State) int {
-	a := lua.Lua_tointeger((*lua.Lua_State)(L), 1)
-	b := lua.Lua_tointeger((*lua.Lua_State)(L), 2)
-	fmt.Printf("goAdd_go(%v, %v): called\n", int(a), int(b))
-	lua.Lua_pushinteger((*lua.Lua_State)(L), a+b)
-	return 1
+type ClassA struct {
+	message string
 }
 
-func Add(L *lua.Lua_State, a, b int) int {
-	lua.Lua_getglobal(L, "add")
-	lua.Lua_pushinteger(L, lua.Lua_Integer(a))
-	lua.Lua_pushinteger(L, lua.Lua_Integer(b))
-	if ret := lua.Lua_pcall(L, 2, 1, 0); ret != 0 {
-		luaerr := lua.Lua_tostring(L, -1)
-		lua.Lua_pop(L, 1)
-		panic(errors.New(luaerr))
+func (this *ClassA) getMessage() string {
+	return this.message
+}
+
+//export lua_ClassA_getMessage
+func lua_ClassA_getMessage(L *C.lua_State) int {
+	a := (*ClassA)(tolua.ToUserType((*lua.Lua_State)(L), 1, "ClassA"))
+	if a == nil {
+		lua.LuaL_error((*lua.Lua_State)(L), "invalid 'obj' in function '%s'", "lua_ClassA_getMessage")
+		return 0
 	}
-	result := int(lua.Lua_tonumber(L, -1))
-	lua.Lua_settop(L, 0)
-	return result
+	argc := lua.Lua_gettop((*lua.Lua_State)(L)) - 1
+	if argc == 0 {
+		message := a.getMessage()
+		lua.Lua_pushstring((*lua.Lua_State)(L), message)
+		return 1
+	}
+	lua.LuaL_error((*lua.Lua_State)(L), "'%s' has wrong number of arguments: %d, was expecting %d \n", "lua_ClassA_getMessage", argc, 1)
+	return 0
+}
+
+func lua_register_class(L *lua.Lua_State) {
+	tolua.BeginModule(L, "")
+	tolua.UserType(L, "ClassA", nil)
+	tolua.Class(L, "ClassA", "ClassA", "")
+	tolua.BeginUserType(L, "ClassA")
+	{
+		tolua.Function(L, "getMessage", (lua.Lua_CFunction)(C.lua_ClassA_getMessage_cgo))
+	}
+	tolua.EndUserType(L)
+	tolua.EndModule(L)
 }
 
 func main() {
 	defer func() {
-		if e := recover(); e != nil {
-			fmt.Println(e)
+		if err := recover(); err != nil {
+			fmt.Println(err)
 		}
 	}()
-	L := lua.LuaL_newstate()
-	defer lua.Lua_close(L)
-	lua.LuaL_openlibs(L)
-	lua.Lua_register(L, "goAdd", (lua.Lua_CFunction)(C.goAdd_cgo))
-	lua.LuaL_dofile(L, "test.lua")
-	result := Add(L, 11, 7) // result = 18
-	fmt.Printf("result=%v\n", result)
+
+	stack := luago.NewLuaStack()
+	defer stack.Close()
+	stack.OpenLibs()
+
+	tolua.Open(stack.GetLuaState())
+	lua_register_class(stack.GetLuaState())
+
+	stack.AddPackagePath("script")
+
+	a := &ClassA{"hello world!"}
+	stack.Load("example")
+
+	stack.PushUserType(unsafe.Pointer(a), "ClassA")
+	stack.ExecuteGlobalFunction("setfunc", 1, 0)
+	fmt.Println("call setfunc")
+	stack.Clean()
+
+	stack.PushUserType(unsafe.Pointer(a), "ClassA")
+	stack.ExecuteGlobalFunction("getfunc", 1, 2)
+	luanumber := stack.ToInt(-2)
+	luastring := stack.ToString(-1)
+	fmt.Println(luanumber, luastring)
+	stack.Clean()
+
+	stack.PushUserType(unsafe.Pointer(a), "ClassA")
+	stack.ExecuteGlobalFunction("showmessage", 1, 0)
+	stack.Clean()
+	/*
+
+		luaStack->pushSharedUserType(clone_a, "ClassA");
+		luaStack->executeGlobalFunction("checkfunc", 1);
+		std::cout<<"call checkfunc"<<std::endl;
+		luaStack->clean();
+
+		luaStack->executeGlobalFunction("createfunc", 0);
+		std::cout<<"call createfunc"<<std::endl;
+		std::shared_ptr<ClassA> a_lua = std::static_pointer_cast<ClassA>(luaStack->toSharedUserType(-1, "ClassA"));
+		luaStack->clean();
+		tolua_function_ref* func = a_lua->getCallback();
+		luaStack->pushString("callback message");
+		luaStack->executeFunction(func, 1);
+		luaStack->clean();
+	*/
+	/*
+		L := lua.LuaL_newstate()
+		defer lua.Lua_close(L)
+		lua.LuaL_openlibs(L)
+		lua.Lua_register(L, "goAdd", (lua.Lua_CFunction)(C.goAdd_cgo))
+		lua.LuaL_dofile(L, "test.lua")
+		result := Add(L, 11, 7) // result = 18
+		fmt.Printf("result=%v\n", result)
+	*/
 }

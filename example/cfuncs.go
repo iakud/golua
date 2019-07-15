@@ -5,11 +5,9 @@ package main
 #include <stdio.h>
 
 // The gateway function
-int goAdd_cgo(lua_State* L) {
-	printf("C.goAdd_cgo(): called\n");
-	fflush(stdout);
-	int goAdd(lua_State* L);
-	return goAdd(L);
+int lua_ClassA_getMessage_cgo(lua_State* L) {
+	int lua_ClassA_getMessage(lua_State* L);
+	return lua_ClassA_getMessage(L);
 }
 */
 import "C"
