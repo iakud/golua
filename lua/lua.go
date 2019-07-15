@@ -122,17 +122,17 @@ func Lua_xmove(from, to *Lua_State, n int) {
 /*
 ** access functions (stack -> C)
  */
-func Lua_isnumber(L *Lua_State, idx int) int {
-	return int(C.lua_isnumber((*C.lua_State)(L), C.int(idx)))
+func Lua_isnumber(L *Lua_State, idx int) bool {
+	return C.lua_isnumber((*C.lua_State)(L), C.int(idx)) != 0
 }
-func Lua_isstring(L *Lua_State, idx int) int {
-	return int(C.lua_isstring((*C.lua_State)(L), C.int(idx)))
+func Lua_isstring(L *Lua_State, idx int) bool {
+	return C.lua_isstring((*C.lua_State)(L), C.int(idx)) != 0
 }
-func Lua_iscfunction(L *Lua_State, idx int) int {
-	return int(C.lua_iscfunction((*C.lua_State)(L), C.int(idx)))
+func Lua_iscfunction(L *Lua_State, idx int) bool {
+	return C.lua_iscfunction((*C.lua_State)(L), C.int(idx)) != 0
 }
-func Lua_isuserdata(L *Lua_State, idx int) int {
-	return int(C.lua_isuserdata((*C.lua_State)(L), C.int(idx)))
+func Lua_isuserdata(L *Lua_State, idx int) bool {
+	return C.lua_isuserdata((*C.lua_State)(L), C.int(idx)) != 0
 }
 func Lua_type(L *Lua_State, idx int) int { return int(C.lua_type((*C.lua_State)(L), C.int(idx))) }
 func Lua_typename(L *Lua_State, tp int) string {
