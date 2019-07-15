@@ -87,29 +87,4 @@ func main() {
 	stack.PushUserType(unsafe.Pointer(a), "ClassA")
 	stack.ExecuteGlobalFunction("showmessage", 1, 0)
 	stack.Clean()
-	/*
-
-		luaStack->pushSharedUserType(clone_a, "ClassA");
-		luaStack->executeGlobalFunction("checkfunc", 1);
-		std::cout<<"call checkfunc"<<std::endl;
-		luaStack->clean();
-
-		luaStack->executeGlobalFunction("createfunc", 0);
-		std::cout<<"call createfunc"<<std::endl;
-		std::shared_ptr<ClassA> a_lua = std::static_pointer_cast<ClassA>(luaStack->toSharedUserType(-1, "ClassA"));
-		luaStack->clean();
-		tolua_function_ref* func = a_lua->getCallback();
-		luaStack->pushString("callback message");
-		luaStack->executeFunction(func, 1);
-		luaStack->clean();
-	*/
-	/*
-		L := lua.LuaL_newstate()
-		defer lua.Lua_close(L)
-		lua.LuaL_openlibs(L)
-		lua.Lua_register(L, "goAdd", (lua.Lua_CFunction)(C.goAdd_cgo))
-		lua.LuaL_dofile(L, "test.lua")
-		result := Add(L, 11, 7) // result = 18
-		fmt.Printf("result=%v\n", result)
-	*/
 }
