@@ -1,7 +1,5 @@
 package tolua
 
-import "C"
-
 import (
 	"unsafe"
 
