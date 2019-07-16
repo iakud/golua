@@ -1,11 +1,11 @@
 package luago
 
 import (
-	"fmt"
-	"unsafe"
-
 	"github.com/iakud/luago/lua"
 	"github.com/iakud/luago/tolua"
+
+	"fmt"
+	"unsafe"
 )
 
 type LuaStack struct {
@@ -23,7 +23,7 @@ func (this *LuaStack) Close() {
 	lua.Lua_close(this.l)
 }
 
-func (this *LuaStack) GetLuaState() *lua.Lua_State {
+func (this *LuaStack) LuaState() *lua.Lua_State {
 	return this.l
 }
 

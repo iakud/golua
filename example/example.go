@@ -1,7 +1,7 @@
 package main
 
 /*
-#include <lua.h>
+typedef struct lua_State lua_State;
 int lua_ClassA_getMessage_cgo(lua_State* L);
 */
 import "C"
@@ -64,8 +64,8 @@ func main() {
 	defer stack.Close()
 	stack.OpenLibs()
 
-	tolua.Open(stack.GetLuaState())
-	lua_register_class(stack.GetLuaState())
+	tolua.Open(stack.LuaState())
+	lua_register_class(stack.LuaState())
 
 	stack.AddPackagePath("script")
 

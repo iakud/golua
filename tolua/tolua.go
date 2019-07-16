@@ -1,9 +1,9 @@
 package tolua
 
 import (
-	"unsafe"
-
 	"github.com/iakud/luago/lua"
+
+	"unsafe"
 )
 
 func Open(L *lua.Lua_State) {
