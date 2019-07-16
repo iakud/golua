@@ -63,8 +63,6 @@ func main() {
 	stack := luago.NewLuaStack()
 	defer stack.Close()
 	stack.OpenLibs()
-
-	tolua.Open(stack.LuaState())
 	lua_register_class(stack.LuaState())
 
 	stack.AddPackagePath("script")

@@ -29,6 +29,7 @@ func (this *LuaStack) LuaState() *lua.Lua_State {
 
 func (this *LuaStack) OpenLibs() {
 	lua.LuaL_openlibs(this.l)
+	tolua.Open(this.l)
 }
 
 func (this *LuaStack) AddPackagePath(path string) {
