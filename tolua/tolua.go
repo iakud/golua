@@ -235,7 +235,7 @@ func PushUserType(L *lua.Lua_State, p unsafe.Pointer, name string) {
 	if lua.Lua_isnil(L, -1) {
 		lua.Lua_pop(L, 1)
 		lua.Lua_pushlightuserdata(L, p)
-		*((*unsafe.Pointer)(lua.Lua_newuserdata(L, 8))) = p
+		*((*unsafe.Pointer)(lua.Lua_newuserdata(L, uint(unsafe.Sizeof(p))))) = p
 		lua.Lua_pushvalue(L, -1)
 		lua.Lua_insert(L, -5)
 		lua.Lua_rawset(L, -3)
