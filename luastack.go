@@ -13,8 +13,11 @@ type LuaStack struct {
 }
 
 func NewLuaStack() *LuaStack {
+	L := lua.LuaL_newstate()
+	lua.LuaL_openlibs(L)
+	tolua.Open(L)
 	luaStack := &LuaStack{
-		l: lua.LuaL_newstate(),
+		l: L,
 	}
 	return luaStack
 }
@@ -25,11 +28,6 @@ func (this *LuaStack) Close() {
 
 func (this *LuaStack) LuaState() *lua.Lua_State {
 	return this.l
-}
-
-func (this *LuaStack) OpenLibs() {
-	lua.LuaL_openlibs(this.l)
-	tolua.Open(this.l)
 }
 
 func (this *LuaStack) AddPackagePath(path string) {
