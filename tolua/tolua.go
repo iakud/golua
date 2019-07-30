@@ -38,7 +38,7 @@ func Module(L *lua.Lua_State, name string) {
 	if len(name) > 0 {
 		lua.Lua_pushstring(L, name)
 		lua.Lua_rawget(L, -2)
-		if lua.Lua_istable(L, -1) {
+		if !lua.Lua_istable(L, -1) {
 			lua.Lua_pop(L, 1)
 			lua.Lua_newtable(L)
 			lua.Lua_pushstring(L, name)
