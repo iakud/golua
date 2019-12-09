@@ -5,6 +5,7 @@ import (
 	"github.com/iakud/luago/tolua"
 
 	"fmt"
+	"runtime"
 	"unsafe"
 )
 
@@ -16,14 +17,17 @@ func NewLuaStack() *LuaStack {
 	L := lua.LuaL_newstate()
 	lua.LuaL_openlibs(L)
 	tolua.Open(L)
-	luaStack := &LuaStack{
+	stack := &LuaStack{
 		l: L,
 	}
-	return luaStack
+	runtime.SetFinalizer(stack, (*LuaStack).Close)
+	return stack
 }
 
 func (this *LuaStack) Close() {
 	lua.Lua_close(this.l)
+	// no need for a finalizer anymore
+	runtime.SetFinalizer(this, nil)
 }
 
 func (this *LuaStack) LuaState() *lua.Lua_State {
@@ -110,6 +114,10 @@ func (this *LuaStack) PushUserType(p unsafe.Pointer, name string) {
 	tolua.PushUserType(this.l, p, name)
 }
 
+func (this *LuaStack) PushFunctionRef(f *tolua.Tolua_FunctionRef) {
+	tolua.PushFunctionRef(this.l, f)
+}
+
 //
 // to value
 //
@@ -149,6 +157,19 @@ func (this *LuaStack) ToUserType(index int, name string) unsafe.Pointer {
 	return tolua.ToUserType(this.l, index, name)
 }
 
+func (this *LuaStack) ToFunctionRef(index int) *tolua.Tolua_FunctionRef {
+	return tolua.ToFunctionRef(this.l, index)
+}
+
+//
+// remove
+//
+func (this *LuaStack) RemoveFunctionRef(f *tolua.Tolua_FunctionRef) {
+	tolua.RemoveFunctionRef(this.l, f)
+}
+
+//
+// stack
 //
 func (this *LuaStack) GetTop() int {
 	return lua.Lua_gettop(this.l)
