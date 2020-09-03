@@ -7,7 +7,7 @@ package tolua
 import "C"
 
 import (
-	"golua/lua"
+	"github.com/iakud/golua/lua"
 
 	"unsafe"
 )

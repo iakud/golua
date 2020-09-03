@@ -1,8 +1,8 @@
 package golua
 
 import (
-	"golua/lua"
-	"golua/tolua"
+	"github.com/iakud/golua/lua"
+	"github.com/iakud/golua/tolua"
 
 	"fmt"
 	"runtime"

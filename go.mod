@@ -1,1 +1,1 @@
-module golua
+module github.com/iakud/golua

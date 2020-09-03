@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"unsafe"
 
-	"golua"
-	"golua/lua"
-	"golua/tolua"
+	"github.com/iakud/golua"
+	"github.com/iakud/golua/lua"
+	"github.com/iakud/golua/tolua"
 )
 
 type ClassA struct {
