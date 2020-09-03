@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"unsafe"
 
-	"github.com/iakud/luago"
-	"github.com/iakud/luago/lua"
-	"github.com/iakud/luago/tolua"
+	"golua"
+	"golua/lua"
+	"golua/tolua"
 )
 
 type ClassA struct {
@@ -60,7 +60,7 @@ func main() {
 		}
 	}()
 
-	stack := luago.NewLuaStack()
+	stack := golua.NewLuaStack()
 	defer stack.Close()
 	lua_register_class(stack.LuaState())
 

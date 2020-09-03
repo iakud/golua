@@ -1,8 +1,8 @@
-package luago
+package golua
 
 import (
-	"github.com/iakud/luago/lua"
-	"github.com/iakud/luago/tolua"
+	"golua/lua"
+	"golua/tolua"
 
 	"fmt"
 	"runtime"

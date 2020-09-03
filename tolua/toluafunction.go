@@ -7,7 +7,7 @@ package tolua
 import "C"
 
 import (
-	"github.com/iakud/luago/lua"
+	"golua/lua"
 )
 
 type Tolua_FunctionRef C.tolua_FunctionRef
