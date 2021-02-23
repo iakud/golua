@@ -8,8 +8,8 @@ function getfunc(a)
 	return a.number, a.string
 end
 
-function showmessage(a)
-	print(a:getMessage())
+function showname(a)
+	print(a:getName())
 end
 
 -- 调用堆栈

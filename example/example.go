@@ -2,7 +2,7 @@ package main
 
 /*
 typedef struct lua_State lua_State;
-int lua_ClassA_getMessage_cgo(lua_State* L);
+int lua_ball_getName(lua_State* L);
 */
 import "C"
 
@@ -15,39 +15,39 @@ import (
 	"github.com/iakud/golua/tolua"
 )
 
-type ClassA struct {
-	message string
+type ball struct {
+	name string
 }
 
-func (this *ClassA) getMessage() string {
-	return this.message
+func (b *ball) getName() string {
+	return b.name
 }
 
-//export lua_ClassA_getMessage
-func lua_ClassA_getMessage(l *C.lua_State) int {
+//export lua_ball_getName
+func lua_ball_getName(l *C.lua_State) C.int {
 	L := (*lua.Lua_State)(l)
-	a := (*ClassA)(tolua.ToUserType(L, 1, "ClassA"))
+	a := (*ball)(tolua.ToUserType(L, 1, "Ball"))
 	if a == nil {
-		lua.LuaL_error(L, "invalid 'obj' in function '%s'", "lua_ClassA_getMessage")
+		lua.LuaL_error(L, "invalid 'obj' in function '%s'", "lua_ball_getName")
 		return 0
 	}
 	argc := lua.Lua_gettop(L) - 1
 	if argc == 0 {
-		message := a.getMessage()
-		lua.Lua_pushstring(L, message)
+		name := a.getName()
+		lua.Lua_pushstring(L, name)
 		return 1
 	}
-	lua.LuaL_error(L, "'%s' has wrong number of arguments: %d, was expecting %d \n", "lua_ClassA_getMessage", argc, 1)
+	lua.LuaL_error(L, "'%s' has wrong number of arguments: %d, was expecting %d \n", "lua_ball_getName", argc, 1)
 	return 0
 }
 
 func lua_register_class(L *lua.Lua_State) {
 	tolua.BeginModule(L, "")
-	tolua.UserType(L, "ClassA", nil)
-	tolua.Class(L, "ClassA", "ClassA", "")
-	tolua.BeginUserType(L, "ClassA")
+	tolua.UserType(L, "Ball", nil)
+	tolua.Class(L, "Ball", "Ball", "")
+	tolua.BeginUserType(L, "Ball")
 	{
-		tolua.Function(L, "getMessage", (lua.Lua_CFunction)(C.lua_ClassA_getMessage_cgo))
+		tolua.Function(L, "getName", (lua.Lua_CFunction)(C.lua_ball_getName))
 	}
 	tolua.EndUserType(L)
 	tolua.EndModule(L)
@@ -66,22 +66,22 @@ func main() {
 
 	stack.AddPackagePath("script")
 
-	a := &ClassA{"hello world!"}
+	a := &ball{"hello world!"}
 	stack.Load("example")
 
-	stack.PushUserType(unsafe.Pointer(a), "ClassA")
+	stack.PushUserType(unsafe.Pointer(a), "Ball")
 	stack.ExecuteGlobalFunction("setfunc", 1, 0)
 	fmt.Println("call setfunc")
 	stack.Clean()
 
-	stack.PushUserType(unsafe.Pointer(a), "ClassA")
+	stack.PushUserType(unsafe.Pointer(a), "Ball")
 	stack.ExecuteGlobalFunction("getfunc", 1, 2)
 	luanumber := stack.ToInt(-2)
 	luastring := stack.ToString(-1)
 	fmt.Println(luanumber, luastring)
 	stack.Clean()
 
-	stack.PushUserType(unsafe.Pointer(a), "ClassA")
-	stack.ExecuteGlobalFunction("showmessage", 1, 0)
+	stack.PushUserType(unsafe.Pointer(a), "Ball")
+	stack.ExecuteGlobalFunction("showname", 1, 0)
 	stack.Clean()
 }
