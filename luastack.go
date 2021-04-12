@@ -9,6 +9,30 @@ import (
 	"unsafe"
 )
 
+/*
+#include <lua.h>
+
+int luastack_traceback (lua_State *L) {
+	if (!lua_isstring(L, 1))	// 'message' not a string?
+		return 1;	// keep it intact
+	lua_getfield(L, LUA_GLOBALSINDEX, "debug");
+	if (!lua_istable(L, -1)) {
+		lua_pop(L, 1);
+		return 1;
+	}
+	lua_getfield(L, -1, "traceback");
+	if (!lua_isfunction(L, -1)) {
+		lua_pop(L, 2);
+		return 1;
+	}
+	lua_pushvalue(L, 1);	// pass error message
+	lua_pushinteger(L, 2);	// skip this function and traceback
+	lua_call(L, 2, 1);		// call debug.traceback
+	return 1;
+}
+*/
+import "C"
+
 type LuaStack struct {
 	l *lua.Lua_State
 }
@@ -204,24 +228,19 @@ func (this *LuaStack) ExecuteString(codes string) {
 }
 
 func (this *LuaStack) execute(nargs, nresults int) {
-	functionIndex := this.FormatIndex(-(nargs + 1))
-	traceback := 0
-	lua.Lua_getglobal(this.l, "__TRACKBACK__")
-	if lua.Lua_isfunction(this.l, -1) {
-		lua.Lua_insert(this.l, functionIndex)
-		traceback = functionIndex
-	} else {
-		lua.Lua_pop(this.l, 1)
-	}
-	if lua.Lua_pcall(this.l, nargs, nresults, traceback) != 0 {
-		err := lua.Lua_tostring(this.l, -1)
-		if traceback != 0 {
-			lua.Lua_pop(this.l, 2)
-		} else {
-			lua.Lua_pop(this.l, 1)
+	base := this.GetTop() - nargs
+	lua.Lua_pushcfunction(this.l, (lua.Lua_CFunction)(C.luastack_traceback))
+	lua.Lua_insert(this.l, base) // put it under chunk and args
+	status := lua.Lua_pcall(this.l, nargs, nresults, base)
+	lua.Lua_remove(this.l, base) // remove traceback function
+	// force a complete garbage collection in case of errors
+	if status != 0 {
+		lua.Lua_gc(this.l, lua.LUA_GCCOLLECT, 0)
+		msg := lua.Lua_tostring(this.l, -1)
+		if len(msg) == 0 {
+			msg = "(error object is not a string)"
 		}
-		panic(err)
-	} else if traceback != 0 {
-		lua.Lua_remove(this.l, traceback)
+		lua.Lua_pop(this.l, 1)
+		panic(msg)
 	}
 }
