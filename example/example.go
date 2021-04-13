@@ -12,15 +12,25 @@ import (
 /*
 typedef struct lua_State lua_State;
 int book_Name(lua_State* L);
+int book_SetSellCallback(lua_State* L);
 */
 import "C"
 
 type book struct {
-	name string
+	name         string
+	sellCallback *tolua.FunctionRef
 }
 
 func (b *book) Name() string {
 	return b.name
+}
+
+func (b *book) SetSellCallback(callback *tolua.FunctionRef) {
+	b.sellCallback = callback
+}
+
+func (b *book) GetSellCallback() *tolua.FunctionRef {
+	return b.sellCallback
 }
 
 //export book_Name
@@ -36,6 +46,23 @@ func book_Name(l *C.lua_State) C.int {
 		lua.Lua_pushstring(L, b.Name())
 		return 1
 	}
+	lua.LuaL_error(L, "'%s' has wrong number of arguments: %d, was expecting %d \n", "book_Name", argc, 0)
+	return 0
+}
+
+//export book_SetSellCallback
+func book_SetSellCallback(l *C.lua_State) C.int {
+	L := (*lua.Lua_State)(l)
+	b := (*book)(tolua.ToUserType(L, 1, "Book"))
+	if b == nil {
+		lua.LuaL_error(L, "invalid 'obj' in function '%s'", "book_Name")
+		return 0
+	}
+	argc := lua.Lua_gettop(L) - 1
+	if argc == 1 {
+		b.SetSellCallback(tolua.ToFunctionRef(L, 2))
+		return 0
+	}
 	lua.LuaL_error(L, "'%s' has wrong number of arguments: %d, was expecting %d \n", "book_Name", argc, 1)
 	return 0
 }
@@ -47,6 +74,7 @@ func register_book(L *lua.Lua_State) {
 	tolua.BeginUserType(L, "Book")
 	{
 		tolua.Function(L, "Name", (lua.Lua_CFunction)(C.book_Name))
+		tolua.Function(L, "SetSellCallback", (lua.Lua_CFunction)(C.book_SetSellCallback))
 	}
 	tolua.EndUserType(L)
 	tolua.EndModule(L)
@@ -60,7 +88,11 @@ func main() {
 	stack.AddPackagePath(".")
 	stack.Load("test")
 
-	b := &book{"Programming in Lua"}
+	b := &book{name: "Programming in Lua"}
+	stack.PushUserType(unsafe.Pointer(b), "Book")
+	stack.ExecuteGlobalFunction("init_book", 1, 0)
+	stack.Clean()
+	log.Println("call init_book")
 	// store author
 	stack.PushUserType(unsafe.Pointer(b), "Book")
 	stack.PushString("Roberto Ierusalimschy")
@@ -73,11 +105,11 @@ func main() {
 	author := stack.ToString(-1)
 	stack.Clean()
 	log.Println("call load_author, author:", author)
-	// print name
-	stack.PushUserType(unsafe.Pointer(b), "Book")
-	stack.ExecuteGlobalFunction("print_name", 1, 0)
+	// callback
+	stack.PushInt(6)
+	stack.ExecuteFunction(b.GetSellCallback(), 1, 0)
 	stack.Clean()
-	log.Println("call print_name")
+	log.Println("callback sell")
 	// test error
 	func() {
 		defer func() {

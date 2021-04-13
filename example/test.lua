@@ -1,13 +1,15 @@
+function init_book(b)
+	b:SetSellCallback(function(n)
+		print(b:Name().." sell: "..n)
+	end)
+end
+
 function store_author(book, author)
 	book.author = author
 end
 
 function load_author(book)
 	return book.author
-end
-
-function print_name(book)
-	print(book:Name())
 end
 
 function test_error()

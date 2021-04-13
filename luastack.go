@@ -188,6 +188,14 @@ func (stack *LuaStack) ExecuteGlobalFunction(funcname string, nargs, nresults in
 	stack.execute(nargs, nresults)
 }
 
+func (stack *LuaStack) ExecuteFunction(f *tolua.FunctionRef, nargs, nresults int) {
+	tolua.PushFunctionRef(stack.L, f)
+	if nargs > 0 {
+		lua.Lua_insert(stack.L, -(nargs + 1))
+	}
+	stack.execute(nargs, nresults)
+}
+
 func (stack *LuaStack) ExecuteString(codes string) {
 	lua.LuaL_loadstring(stack.L, codes)
 	stack.execute(0, 0)
