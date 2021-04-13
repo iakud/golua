@@ -90,24 +90,24 @@ func main() {
 
 	b := &book{name: "Programming in Lua"}
 	stack.PushUserType(unsafe.Pointer(b), "Book")
-	stack.ExecuteGlobalFunction("init_book", 1, 0)
+	stack.ExecuteGlobalFunction("init_book", 1, lua.LUA_MULTRET)
 	stack.Clean()
 	log.Println("call init_book")
 	// store author
 	stack.PushUserType(unsafe.Pointer(b), "Book")
 	stack.PushString("Roberto Ierusalimschy")
-	stack.ExecuteGlobalFunction("store_author", 2, 0)
+	stack.ExecuteGlobalFunction("store_author", 2, lua.LUA_MULTRET)
 	stack.Clean()
 	log.Println("call store_author")
 	// load author
 	stack.PushUserType(unsafe.Pointer(b), "Book")
-	stack.ExecuteGlobalFunction("load_author", 1, 1)
+	stack.ExecuteGlobalFunction("load_author", 1, lua.LUA_MULTRET)
 	author := stack.ToString(-1)
 	stack.Clean()
 	log.Println("call load_author, author:", author)
 	// callback
 	stack.PushInt(6)
-	stack.ExecuteFunction(b.GetSellCallback(), 1, 0)
+	stack.ExecuteFunction(b.GetSellCallback(), 1, lua.LUA_MULTRET)
 	stack.Clean()
 	log.Println("callback sell")
 	// test error
@@ -118,7 +118,7 @@ func main() {
 			}
 		}()
 		log.Println("call test_error before")
-		stack.ExecuteGlobalFunction("test_error", 0, 0)
+		stack.ExecuteGlobalFunction("test_error", 0, lua.LUA_MULTRET)
 		stack.Clean()
 	}()
 	log.Println("finish")
