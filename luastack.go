@@ -138,7 +138,7 @@ func (this *LuaStack) PushUserType(p unsafe.Pointer, name string) {
 	tolua.PushUserType(this.l, p, name)
 }
 
-func (this *LuaStack) PushFunctionRef(f *tolua.Tolua_FunctionRef) {
+func (this *LuaStack) PushFunctionRef(f *tolua.FunctionRef) {
 	tolua.PushFunctionRef(this.l, f)
 }
 
@@ -181,14 +181,14 @@ func (this *LuaStack) ToUserType(index int, name string) unsafe.Pointer {
 	return tolua.ToUserType(this.l, index, name)
 }
 
-func (this *LuaStack) ToFunctionRef(index int) *tolua.Tolua_FunctionRef {
+func (this *LuaStack) ToFunctionRef(index int) *tolua.FunctionRef {
 	return tolua.ToFunctionRef(this.l, index)
 }
 
 //
 // remove
 //
-func (this *LuaStack) RemoveFunctionRef(f *tolua.Tolua_FunctionRef) {
+func (this *LuaStack) RemoveFunctionRef(f *tolua.FunctionRef) {
 	tolua.RemoveFunctionRef(this.l, f)
 }
 
@@ -228,19 +228,9 @@ func (this *LuaStack) ExecuteString(codes string) {
 }
 
 func (this *LuaStack) execute(nargs, nresults int) {
-	base := this.GetTop() - nargs
-	lua.Lua_pushcfunction(this.l, (lua.Lua_CFunction)(C.luastack_traceback))
-	lua.Lua_insert(this.l, base) // put it under chunk and args
-	status := lua.Lua_pcall(this.l, nargs, nresults, base)
-	lua.Lua_remove(this.l, base) // remove traceback function
-	// force a complete garbage collection in case of errors
-	if status != 0 {
-		lua.Lua_gc(this.l, lua.LUA_GCCOLLECT, 0)
-		msg := lua.Lua_tostring(this.l, -1)
-		if len(msg) == 0 {
-			msg = "(error object is not a string)"
-		}
+	if tolua.DoCall(this.l, nargs, nresults) != 0 && !lua.Lua_isnil(this.l, -1) {
+		err := lua.Lua_tostring(this.l, -1)
 		lua.Lua_pop(this.l, 1)
-		panic(msg)
+		panic(err)
 	}
 }
