@@ -56,7 +56,7 @@ func main() {
 	stack := golua.NewLuaStack()
 	defer stack.Close()
 
-	register_book(stack.LuaState())
+	register_book(stack.L)
 	stack.AddPackagePath(".")
 	stack.Load("test")
 
