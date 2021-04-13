@@ -66,15 +66,18 @@ func main() {
 	stack.PushString("Roberto Ierusalimschy")
 	stack.ExecuteGlobalFunction("store_author", 2, 0)
 	stack.Clean()
+	log.Println("call store_author")
 	// load author
 	stack.PushUserType(unsafe.Pointer(b), "Book")
 	stack.ExecuteGlobalFunction("load_author", 1, 1)
-	log.Println("author:", stack.ToString(-1))
+	author := stack.ToString(-1)
 	stack.Clean()
+	log.Println("call load_author, author:", author)
 	// print name
 	stack.PushUserType(unsafe.Pointer(b), "Book")
 	stack.ExecuteGlobalFunction("print_name", 1, 0)
 	stack.Clean()
+	log.Println("call print_name")
 	// test error
 	func() {
 		defer func() {
@@ -82,7 +85,9 @@ func main() {
 				log.Println(err)
 			}
 		}()
+		log.Println("call test_error before")
 		stack.ExecuteGlobalFunction("test_error", 0, 0)
 		stack.Clean()
 	}()
+	log.Println("finish")
 }
