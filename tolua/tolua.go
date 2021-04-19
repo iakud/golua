@@ -1,6 +1,7 @@
 package tolua
 
 /*
+#cgo pkg-config: tolua luajit
 #include <tolua/tolua.h>
 #include <stdlib.h>
 */
