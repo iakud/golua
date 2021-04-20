@@ -16,8 +16,7 @@ func NewLuaStack() *LuaStack {
 	L := lua.LuaL_newstate()
 	lua.LuaL_openlibs(L)
 	tolua.Open(L)
-	stack := &LuaStack{L}
-	return stack
+	return &LuaStack{L}
 }
 
 func (stack *LuaStack) Close() {

@@ -9,16 +9,16 @@ import (
 	"github.com/iakud/golua/lua"
 )
 
-type FunctionRef C.tolua_FunctionRef
+type FunctionRef = C.tolua_FunctionRef
 
 func ToFunctionRef(L *lua.Lua_State, index int) *FunctionRef {
-	return (*FunctionRef)(C.tolua_tofunction_ref((*C.lua_State)(L), C.int(index)))
+	return C.tolua_tofunction_ref((*C.lua_State)(L), C.int(index))
 }
 
 func PushFunctionRef(L *lua.Lua_State, f *FunctionRef) {
-	C.tolua_pushfunction_ref((*C.lua_State)(L), (*C.tolua_FunctionRef)(f))
+	C.tolua_pushfunction_ref((*C.lua_State)(L), f)
 }
 
 func RemoveFunctionRef(L *lua.Lua_State, f *FunctionRef) {
-	C.tolua_removefunction_ref((*C.lua_State)(L), (*C.tolua_FunctionRef)(f))
+	C.tolua_removefunction_ref((*C.lua_State)(L), f)
 }
