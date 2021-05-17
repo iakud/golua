@@ -18,17 +18,44 @@ import (
 /* extra error code for `luaL_load' */
 const LUA_ERRFILE int = LUA_ERRERR + 1
 
-type LuaL_Reg = C.luaL_Reg
-
-func luaL_openlib(L *Lua_State, libname string, l *LuaL_Reg, nup int) {
-	c_libname := C.CString(libname)
-	defer C.free(unsafe.Pointer(c_libname))
-	C.luaL_openlib(L, c_libname, l, C.int(nup))
+type LuaL_Reg struct {
+	Name string
+	Func Lua_CFunction
 }
-func LuaL_register(L *Lua_State, libname string, l *LuaL_Reg) {
+
+const sizeofLuaLReg = C.sizeof_struct_luaL_Reg
+
+var LuaL_openlib = LuaI_openlib
+
+func LuaI_openlib(L *Lua_State, libname string, l []LuaL_Reg, nup int) {
 	c_libname := C.CString(libname)
 	defer C.free(unsafe.Pointer(c_libname))
-	C.luaL_register(L, c_libname, l)
+
+	c_l := (*C.luaL_Reg)(C.malloc(sizeofLuaLReg * C.size_t(len(l)+1)))
+	defer C.free(unsafe.Pointer(c_l))
+	for i := 0; i < len(l); i++ {
+		c_fname := C.CString(l[i].Name)
+		defer C.free(unsafe.Pointer(c_fname))
+		*(*C.luaL_Reg)(unsafe.Pointer(uintptr(unsafe.Pointer(c_l)) + uintptr(sizeofLuaLReg*i))) = C.luaL_Reg{c_fname, l[i].Func}
+	}
+	*(*C.luaL_Reg)(unsafe.Pointer(uintptr(unsafe.Pointer(c_l)) + uintptr(sizeofLuaLReg*len(l)))) = C.luaL_Reg{}
+
+	C.luaL_openlib(L, c_libname, c_l, C.int(nup))
+}
+func LuaL_register(L *Lua_State, libname string, l []LuaL_Reg) {
+	c_libname := C.CString(libname)
+	defer C.free(unsafe.Pointer(c_libname))
+
+	c_l := (*C.luaL_Reg)(C.malloc(sizeofLuaLReg * C.size_t(len(l)+1)))
+	defer C.free(unsafe.Pointer(c_l))
+	for i := 0; i < len(l); i++ {
+		c_fname := C.CString(l[i].Name)
+		defer C.free(unsafe.Pointer(c_fname))
+		*(*C.luaL_Reg)(unsafe.Pointer(uintptr(unsafe.Pointer(c_l)) + uintptr(sizeofLuaLReg*i))) = C.luaL_Reg{c_fname, l[i].Func}
+	}
+	*(*C.luaL_Reg)(unsafe.Pointer(uintptr(unsafe.Pointer(c_l)) + uintptr(sizeofLuaLReg*len(l)))) = C.luaL_Reg{}
+
+	C.luaL_register(L, c_libname, c_l)
 }
 func LuaL_getmetafield(L *Lua_State, obj int, e string) int {
 	c_e := C.CString(e)

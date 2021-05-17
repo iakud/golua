@@ -99,6 +99,10 @@ func (stack *LuaStack) PushLString(value string) {
 	lua.Lua_pushlstring(stack.L, value)
 }
 
+func (stack *LuaStack) PushLightUserdata(p unsafe.Pointer) {
+	lua.Lua_pushlightuserdata(stack.L, p)
+}
+
 func (stack *LuaStack) PushUserType(p unsafe.Pointer, name string) {
 	tolua.PushUserType(stack.L, p, name)
 }
@@ -140,6 +144,10 @@ func (stack *LuaStack) ToString(index int) string {
 
 func (stack *LuaStack) ToLString(index int) string {
 	return lua.Lua_tolstring(stack.L, index)
+}
+
+func (stack *LuaStack) ToUserdata(index int) unsafe.Pointer {
+	return lua.Lua_touserdata(stack.L, index)
 }
 
 func (stack *LuaStack) ToUserType(index int, name string) unsafe.Pointer {
