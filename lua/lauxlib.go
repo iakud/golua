@@ -33,12 +33,15 @@ func LuaI_openlib(L *Lua_State, libname string, l []LuaL_Reg, nup int) {
 
 	c_l := (*C.luaL_Reg)(C.malloc(sizeofLuaLReg * C.size_t(len(l)+1)))
 	defer C.free(unsafe.Pointer(c_l))
-	for i := 0; i < len(l); i++ {
-		c_fname := C.CString(l[i].Name)
+
+	p := uintptr(unsafe.Pointer(c_l))
+	for _, v := range l {
+		c_fname := C.CString(v.Name)
 		defer C.free(unsafe.Pointer(c_fname))
-		*(*C.luaL_Reg)(unsafe.Pointer(uintptr(unsafe.Pointer(c_l)) + uintptr(sizeofLuaLReg*i))) = C.luaL_Reg{c_fname, l[i].Func}
+		*(*C.luaL_Reg)(unsafe.Pointer(p)) = C.luaL_Reg{c_fname, v.Func}
+		p += sizeofLuaLReg
 	}
-	*(*C.luaL_Reg)(unsafe.Pointer(uintptr(unsafe.Pointer(c_l)) + uintptr(sizeofLuaLReg*len(l)))) = C.luaL_Reg{}
+	*(*C.luaL_Reg)(unsafe.Pointer(p)) = C.luaL_Reg{}
 
 	C.luaL_openlib(L, c_libname, c_l, C.int(nup))
 }
@@ -48,12 +51,15 @@ func LuaL_register(L *Lua_State, libname string, l []LuaL_Reg) {
 
 	c_l := (*C.luaL_Reg)(C.malloc(sizeofLuaLReg * C.size_t(len(l)+1)))
 	defer C.free(unsafe.Pointer(c_l))
-	for i := 0; i < len(l); i++ {
-		c_fname := C.CString(l[i].Name)
+
+	p := uintptr(unsafe.Pointer(c_l))
+	for _, v := range l {
+		c_fname := C.CString(v.Name)
 		defer C.free(unsafe.Pointer(c_fname))
-		*(*C.luaL_Reg)(unsafe.Pointer(uintptr(unsafe.Pointer(c_l)) + uintptr(sizeofLuaLReg*i))) = C.luaL_Reg{c_fname, l[i].Func}
+		*(*C.luaL_Reg)(unsafe.Pointer(p)) = C.luaL_Reg{c_fname, v.Func}
+		p += sizeofLuaLReg
 	}
-	*(*C.luaL_Reg)(unsafe.Pointer(uintptr(unsafe.Pointer(c_l)) + uintptr(sizeofLuaLReg*len(l)))) = C.luaL_Reg{}
+	*(*C.luaL_Reg)(unsafe.Pointer(p)) = C.luaL_Reg{}
 
 	C.luaL_register(L, c_libname, c_l)
 }
